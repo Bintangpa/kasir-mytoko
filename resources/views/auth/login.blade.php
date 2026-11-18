@@ -205,11 +205,11 @@
                 <!-- AKUN DEMO CEPAT (1-Klik untuk mengisi form, mempertahankan fungsionalitas) -->
                 <div class="mt-6 pt-5 border-t border-slate-100">
                     <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-2">Pilih Cepat Akun Demo (1-Klik):</span>
-                    <div class="grid grid-cols-2 gap-2">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
                         <button type="button" onclick="fillCreds('admin@mytoko.com', 'password')" 
                             class="p-2.5 rounded-xl border border-slate-200 hover:border-[#5DD62C] bg-[#F8F8F8] hover:bg-[#5DD62C]/10 text-left transition-all group">
                             <div class="flex items-center gap-1.5">
-                                <span class="w-2 h-2 rounded-full bg-[#5DD62C]"></span>
+                                <span class="w-2 h-2 rounded-full bg-[#0F0F0F]"></span>
                                 <span class="text-xs font-black text-[#0F0F0F] group-hover:text-[#337418]">Admin Toko</span>
                             </div>
                             <span class="text-[10px] text-slate-400 font-mono block mt-0.5 truncate">admin@mytoko.com</span>
@@ -222,6 +222,15 @@
                                 <span class="text-xs font-black text-[#0F0F0F] group-hover:text-[#337418]">Kasir Utama</span>
                             </div>
                             <span class="text-[10px] text-slate-400 font-mono block mt-0.5 truncate">kasir@mytoko.com</span>
+                        </button>
+
+                        <button type="button" onclick="fillCreds('user@mytoko.com', 'password')" 
+                            class="p-2.5 rounded-xl border border-slate-200 hover:border-[#5DD62C] bg-[#F8F8F8] hover:bg-[#5DD62C]/10 text-left transition-all group">
+                            <div class="flex items-center gap-1.5">
+                                <span class="w-2 h-2 rounded-full bg-[#5DD62C]"></span>
+                                <span class="text-xs font-black text-[#0F0F0F] group-hover:text-[#337418]">Pengguna</span>
+                            </div>
+                            <span class="text-[10px] text-slate-400 font-mono block mt-0.5 truncate">user@mytoko.com</span>
                         </button>
                     </div>
                 </div>

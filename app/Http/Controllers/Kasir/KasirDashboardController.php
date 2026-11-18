@@ -17,17 +17,19 @@ class KasirDashboardController extends Controller
         $userId = Auth::id();
         $today = Carbon::today();
 
-        // Metrik Kasir Hari Ini
-        $todaySales = Transaction::where('user_id', $userId)
+        // Metrik Kasir Hari Ini (hanya transaksi lunas)
+        $todaySales = Transaction::paid()
+            ->where('user_id', $userId)
             ->whereDate('created_at', $today)
             ->sum('total_price');
 
-        $todayTransactions = Transaction::where('user_id', $userId)
+        $todayTransactions = Transaction::paid()
+            ->where('user_id', $userId)
             ->whereDate('created_at', $today)
             ->count();
 
         $todayItemsSold = TransactionItem::whereHas('transaction', function ($q) use ($userId, $today) {
-            $q->where('user_id', $userId)->whereDate('created_at', $today);
+            $q->paid()->where('user_id', $userId)->whereDate('created_at', $today);
         })->sum('quantity');
 
         // Transaksi shift hari ini oleh kasir ini

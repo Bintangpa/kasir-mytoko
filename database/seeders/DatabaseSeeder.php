@@ -19,7 +19,7 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // 1. Akun Pengguna (Admin & Kasir)
+        // 1. Akun Pengguna (Admin, Kasir, & User / Pengguna)
         $admin = User::firstOrCreate(
             ['email' => 'admin@mytoko.com'],
             [
@@ -49,6 +49,17 @@ class DatabaseSeeder extends Seeder
                 'password' => Hash::make('password'),
                 'role' => 'kasir',
                 'phone' => '081311223344',
+                'is_active' => true,
+            ]
+        );
+
+        User::firstOrCreate(
+            ['email' => 'user@mytoko.com'],
+            [
+                'name' => 'Pengguna - Andi Pratama',
+                'password' => Hash::make('password'),
+                'role' => 'user',
+                'phone' => '081355667788',
                 'is_active' => true,
             ]
         );
@@ -335,6 +346,8 @@ class DatabaseSeeder extends Seeder
                     'pay_amount' => $st['pay'],
                     'change_amount' => $change,
                     'payment_method' => $st['method'],
+                    'payment_status' => 'paid',
+                    'paid_at' => $st['date'],
                     'notes' => 'Transaksi demo seeder',
                     'created_at' => $st['date'],
                     'updated_at' => $st['date'],

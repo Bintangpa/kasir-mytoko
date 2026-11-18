@@ -31,12 +31,16 @@ class RoleMiddleware
         }
 
         if (!in_array($user->role, $roles, true)) {
-            // Jika role tidak sesuai, arahkan ke dashboard masing-masing dengan notifikasi
+            // Jika role tidak sesuai, arahkan ke halaman utama masing-masing peran dengan notifikasi
             if ($user->role === 'admin') {
-                return redirect()->route('admin.dashboard')->with('warning', 'Halaman tersebut khusus untuk Kasir.');
+                return redirect()->route('admin.dashboard')->with('warning', 'Halaman tersebut tidak sesuai dengan peran Administrator.');
             }
 
-            return redirect()->route('kasir.dashboard')->with('warning', 'Akses ditolak: Anda tidak memiliki izin Administrator.');
+            if ($user->role === 'kasir') {
+                return redirect()->route('kasir.dashboard')->with('warning', 'Akses ditolak: Anda tidak memiliki izin untuk halaman tersebut.');
+            }
+
+            return redirect()->route('user.products.index')->with('warning', 'Akses ditolak: Halaman tersebut khusus untuk pengelola toko.');
         }
 
         return $next($request);

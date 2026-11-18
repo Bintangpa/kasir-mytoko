@@ -16,8 +16,8 @@ class TransactionReceiptController extends Controller
     {
         $transaction->load(['user', 'items']);
 
-        // Kasir hanya boleh mencetak transaksinya sendiri kecuali jika user adalah admin
-        if (Auth::user()->isKasir() && $transaction->user_id !== Auth::id()) {
+        // Hanya admin yang boleh mencetak semua transaksi; kasir & pengguna hanya boleh mencetak transaksinya sendiri
+        if (!Auth::user()->isAdmin() && $transaction->user_id !== Auth::id()) {
             abort(403, 'Anda tidak memiliki hak akses untuk mencetak struk transaksi ini.');
         }
 

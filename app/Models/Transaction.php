@@ -22,6 +22,13 @@ class Transaction extends Model
         'pay_amount',
         'change_amount',
         'payment_method',
+        'payment_status',
+        'va_bank',
+        'va_number',
+        'va_biller_code',
+        'gateway_transaction_id',
+        'payment_expired_at',
+        'paid_at',
         'notes',
     ];
 
@@ -34,7 +41,33 @@ class Transaction extends Model
             'total_price' => 'decimal:2',
             'pay_amount' => 'decimal:2',
             'change_amount' => 'decimal:2',
+            'payment_expired_at' => 'datetime',
+            'paid_at' => 'datetime',
         ];
+    }
+
+    public function scopePaid($query)
+    {
+        return $query->where('payment_status', 'paid');
+    }
+
+    public function isPaid(): bool
+    {
+        return ($this->payment_status ?? 'paid') === 'paid';
+    }
+
+    public function isPending(): bool
+    {
+        return $this->payment_status === 'pending';
+    }
+
+    public function getPaymentMethodLabelAttribute(): string
+    {
+        if ($this->payment_method === 'va') {
+            return 'VA ' . strtoupper((string) ($this->va_bank ?: 'BANK'));
+        }
+
+        return strtoupper((string) $this->payment_method);
     }
 
     public function user(): BelongsTo

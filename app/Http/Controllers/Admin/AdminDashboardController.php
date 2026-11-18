@@ -18,14 +18,15 @@ class AdminDashboardController extends Controller
     {
         $today = Carbon::today();
 
-        // Metrik Keuangan & Transaksi
-        $totalSales = Transaction::sum('total_price');
-        $todaySales = Transaction::whereDate('created_at', $today)->sum('total_price');
-        $totalTransactions = Transaction::count();
-        $todayTransactions = Transaction::whereDate('created_at', $today)->count();
+        // Metrik Keuangan & Transaksi (Hanya menghitung transaksi berstatus LUNAS / paid)
+        $totalSales = Transaction::paid()->sum('total_price');
+        $todaySales = Transaction::paid()->whereDate('created_at', $today)->sum('total_price');
+        $totalTransactions = Transaction::paid()->count();
+        $todayTransactions = Transaction::paid()->whereDate('created_at', $today)->count();
 
-        // Perkiraan Total Modal & Laba Kotor Keseluruhan
-        $totalCost = TransactionItem::select(DB::raw('SUM(cost_price * quantity) as total_cost'))
+        // Perkiraan Total Modal & Laba Kotor Keseluruhan (khusus transaksi lunas)
+        $totalCost = TransactionItem::whereHas('transaction', fn ($q) => $q->paid())
+            ->select(DB::raw('SUM(cost_price * quantity) as total_cost'))
             ->value('total_cost') ?? 0;
         $grossProfit = $totalSales - $totalCost;
 
@@ -35,7 +36,7 @@ class AdminDashboardController extends Controller
         $totalCategories = Category::count();
         $totalCashiers = User::where('role', 'kasir')->count();
 
-        // 8 Transaksi Terbaru
+        // 8 Transaksi Terbaru (termasuk transaksi VA pending agar admin bisa memantau)
         $recentTransactions = Transaction::with(['user', 'items'])
             ->latest()
             ->take(8)
@@ -48,8 +49,9 @@ class AdminDashboardController extends Controller
             ->take(5)
             ->get();
 
-        // 5 Produk Terlaris
-        $topProducts = TransactionItem::select(
+        // 5 Produk Terlaris (khusus transaksi lunas)
+        $topProducts = TransactionItem::whereHas('transaction', fn ($q) => $q->paid())
+            ->select(
                 'product_name',
                 DB::raw('SUM(quantity) as total_sold'),
                 DB::raw('SUM(subtotal) as total_revenue')
@@ -59,12 +61,12 @@ class AdminDashboardController extends Controller
             ->take(5)
             ->get();
 
-        // Statistik Penjualan 7 Hari Terakhir
+        // Statistik Penjualan 7 Hari Terakhir (khusus transaksi lunas)
         $last7Days = collect();
         for ($i = 6; $i >= 0; $i--) {
             $date = Carbon::today()->subDays($i);
-            $dayTotal = Transaction::whereDate('created_at', $date)->sum('total_price');
-            $dayCount = Transaction::whereDate('created_at', $date)->count();
+            $dayTotal = Transaction::paid()->whereDate('created_at', $date)->sum('total_price');
+            $dayCount = Transaction::paid()->whereDate('created_at', $date)->count();
 
             $last7Days->push([
                 'date' => $date->format('d M'),

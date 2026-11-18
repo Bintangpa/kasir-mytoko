@@ -8,7 +8,7 @@
 
     <!-- Filter Card -->
     <div class="bg-white p-5 rounded-3xl border border-slate-200/90 shadow-2xs">
-        <form method="GET" action="{{ route('admin.reports.index') }}" class="grid grid-cols-1 sm:grid-cols-4 gap-4 items-end">
+        <form method="GET" action="{{ route('admin.reports.index') }}" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
             <div>
                 <label class="block text-xs font-bold text-slate-700 mb-1.5">Dari Tanggal</label>
                 <input type="date" name="start_date" value="{{ $startDate }}"
@@ -22,12 +22,23 @@
             </div>
 
             <div>
-                <label class="block text-xs font-bold text-slate-700 mb-1.5">Pilih Kasir</label>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">Kasir / Pengguna</label>
                 <select name="user_id" class="w-full px-3.5 py-2 text-xs bg-[#F8F8F8] border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5DD62C] focus:bg-white text-slate-700 font-medium">
-                    <option value="">Semua Kasir</option>
+                    <option value="">Semua Akun</option>
                     @foreach($cashiers as $c)
-                        <option value="{{ $c->id }}" {{ $userId == $c->id ? 'selected' : '' }}>{{ $c->name }}</option>
+                        <option value="{{ $c->id }}" {{ $userId == $c->id ? 'selected' : '' }}>{{ $c->name }} ({{ ucfirst($c->role) }})</option>
                     @endforeach
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">Status Pembayaran</label>
+                <select name="payment_status" class="w-full px-3.5 py-2 text-xs bg-[#F8F8F8] border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5DD62C] focus:bg-white text-slate-700 font-medium">
+                    <option value="">Semua Status</option>
+                    <option value="paid" {{ ($paymentStatus ?? '') === 'paid' ? 'selected' : '' }}>Lunas (Paid)</option>
+                    <option value="pending" {{ ($paymentStatus ?? '') === 'pending' ? 'selected' : '' }}>Menunggu Bayar (Pending)</option>
+                    <option value="expired" {{ ($paymentStatus ?? '') === 'expired' ? 'selected' : '' }}>Kedaluwarsa (Expired)</option>
+                    <option value="failed" {{ ($paymentStatus ?? '') === 'failed' ? 'selected' : '' }}>Gagal / Batal</option>
                 </select>
             </div>
 
@@ -89,6 +100,7 @@
                         <th class="p-3.5">Pelanggan</th>
                         <th class="p-3.5">Rincian Item</th>
                         <th class="p-3.5">Metode</th>
+                        <th class="p-3.5">Status</th>
                         <th class="p-3.5">Total Bayar</th>
                         <th class="p-3.5 pr-5 text-right">Struk</th>
                     </tr>
@@ -117,8 +129,20 @@
                             </td>
                             <td class="p-3.5">
                                 <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase {{ $trx->payment_method === 'cash' ? 'bg-[#5DD62C]/20 text-[#337418] border border-[#5DD62C]/30' : 'bg-[#202020] text-[#5DD62C] border border-[#2A2A2A]' }}">
-                                    {{ $trx->payment_method }}
+                                    {{ $trx->payment_method_label }}
                                 </span>
+                                @if($trx->va_number)
+                                    <div class="font-mono text-[10px] text-slate-500 mt-0.5">{{ $trx->va_number }}</div>
+                                @endif
+                            </td>
+                            <td class="p-3.5">
+                                @if($trx->isPaid())
+                                    <span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-[#5DD62C]/20 text-[#337418] border border-[#5DD62C]/30">Lunas</span>
+                                @elseif($trx->isPending())
+                                    <span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-amber-100 text-amber-800 border border-amber-200">Pending</span>
+                                @else
+                                    <span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-rose-100 text-rose-700 border border-rose-200">{{ ucfirst($trx->payment_status) }}</span>
+                                @endif
                             </td>
                             <td class="p-3.5 font-black text-[#0F0F0F]">
                                 Rp {{ number_format($trx->total_price, 0, ',', '.') }}
@@ -133,7 +157,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" class="p-8 text-center text-slate-400">Tidak ada transaksi ditemukan pada periode filter ini.</td>
+                            <td colspan="9" class="p-8 text-center text-slate-400">Tidak ada transaksi ditemukan pada periode filter ini.</td>
                         </tr>
                     @endforelse
                 </tbody>

@@ -126,6 +126,8 @@ class PosController extends Controller
                     'pay_amount' => $payAmount,
                     'change_amount' => $changeAmount,
                     'payment_method' => $paymentMethod,
+                    'payment_status' => 'paid',
+                    'paid_at' => now(),
                     'notes' => $notes,
                 ]);
 

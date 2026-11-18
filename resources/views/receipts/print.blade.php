@@ -1,9 +1,12 @@
+@php
+    $isReadOnlyUser = auth()->check() && auth()->user()->isUser();
+@endphp
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Struk Thermal 80mm - {{ $transaction->invoice_code }}</title>
+    <title>{{ $isReadOnlyUser ? 'Struk Pembayaran' : 'Struk Thermal 80mm' }} - {{ $transaction->invoice_code }}</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -51,6 +54,24 @@
             margin: 0.85rem 0;
         }
 
+        @if($isReadOnlyUser)
+        /* Mode Hanya Lihat untuk Role User: Mencegah Pencetakan */
+        @media print {
+            body * {
+                display: none !important;
+            }
+            body::before {
+                content: "Fitur cetak struk tidak tersedia untuk akun Pengguna (Hanya Lihat).";
+                display: block !important;
+                padding: 24px;
+                font-family: 'Plus Jakarta Sans', sans-serif;
+                font-size: 14px;
+                font-weight: 700;
+                text-align: center;
+                color: #0F0F0F;
+            }
+        }
+        @else
         /* Standar Cetak Nyata Khusus Printer Thermal 80mm (Edge-to-Edge Full Width) */
         @media print {
             *, *:before, *:after {
@@ -96,8 +117,10 @@
                 margin: 0.65rem 0 !important;
             }
         }
+        @endif
     </style>
 
+    @unless($isReadOnlyUser)
     <!-- Tag Style Dinamis untuk @page (Wajib Literal tanpa var() agar Driver Printer & Chrome Mengenali Ukuran 80mm) -->
     <style id="dynamicPageStyle">
         @page {
@@ -109,9 +132,30 @@
             margin: 0mm !important;
         }
     </style>
+    @endunless
 </head>
 <body class="min-h-screen flex flex-col items-center py-6 px-3">
 
+    @if($isReadOnlyUser)
+    <!-- HEADER KHUSUS ROLE USER (HANYA LIHAT STRUK — TANPA TOMBOL CETAK) -->
+    <header class="sticky top-3 z-40 w-full max-w-[440px] bg-[#0F0F0F] text-white border border-[#2A2A2A] rounded-2xl shadow-lg p-3 mb-4 flex items-center justify-between gap-2.5">
+        <div class="flex items-center gap-2.5 min-w-0">
+            <div class="w-8 h-8 rounded-xl bg-[#5DD62C]/20 text-[#5DD62C] border border-[#5DD62C]/30 flex items-center justify-center shrink-0">
+                <i class="fa-solid fa-receipt text-xs"></i>
+            </div>
+            <div class="min-w-0">
+                <span class="block text-xs font-black text-white truncate">Struk Pembayaran Digital</span>
+                <span class="block text-[10px] font-bold text-[#5DD62C]">Mode Hanya Lihat</span>
+            </div>
+        </div>
+
+        <a href="{{ route('user.transactions.index') }}"
+           class="px-3 py-1.5 bg-[#202020] hover:bg-[#5DD62C] text-slate-200 hover:text-[#0F0F0F] border border-[#2E2E2E] text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 shrink-0">
+            <i class="fa-solid fa-arrow-left text-[11px]"></i>
+            <span>Kembali</span>
+        </a>
+    </header>
+    @else
     <!-- TOOLBAR ATAS: PRESET CEPAT & AKSI (TIDAK TERCETAK) -->
     <header class="no-print sticky top-3 z-40 w-full max-w-xl bg-white/95 backdrop-blur-md border border-slate-200/90 rounded-2xl shadow-sm p-3 mb-3 flex flex-wrap items-center justify-between gap-2.5">
         <!-- Preset Kertas Cepat -->
@@ -189,6 +233,7 @@
             </div>
         </div>
     </div>
+    @endif
 
     <!-- CONTAINER DOKUMEN STRUK / NOTA 80MM MODERN (FULL LEBAR 80MM & PANJANG KE BAWAH) -->
     <div class="receipt-slip bg-white text-slate-950 border border-slate-200/90 shadow-2xl rounded-t-xl transition-all duration-200 mx-auto select-none relative mb-12" id="receiptPaper">
@@ -226,8 +271,26 @@
             </div>
             <div class="flex justify-between items-center pt-0.5">
                 <span class="text-slate-500 font-semibold">Status:</span>
-                <span class="px-2.5 py-0.5 rounded text-[11px] font-black bg-emerald-100 text-emerald-800 uppercase tracking-wider border border-emerald-300">Lunas (Paid)</span>
+                @if($transaction->isPaid())
+                    <span class="px-2.5 py-0.5 rounded text-[11px] font-black bg-emerald-100 text-emerald-800 uppercase tracking-wider border border-emerald-300">Lunas (Paid)</span>
+                @elseif($transaction->isPending())
+                    <span class="px-2.5 py-0.5 rounded text-[11px] font-black bg-amber-100 text-amber-800 uppercase tracking-wider border border-amber-300">Menunggu Bayar</span>
+                @else
+                    <span class="px-2.5 py-0.5 rounded text-[11px] font-black bg-rose-100 text-rose-800 uppercase tracking-wider border border-rose-300">{{ strtoupper($transaction->payment_status ?? 'BATAL') }}</span>
+                @endif
             </div>
+            @if($transaction->va_number)
+            <div class="flex justify-between items-center">
+                <span class="text-slate-500 font-semibold">No. VA ({{ strtoupper($transaction->va_bank ?? 'VA') }}):</span>
+                <span class="font-mono font-black text-slate-950 text-[12px]">{{ $transaction->va_number }}</span>
+            </div>
+            @endif
+            @if($transaction->va_biller_code)
+            <div class="flex justify-between items-center">
+                <span class="text-slate-500 font-semibold">Biller Code:</span>
+                <span class="font-mono font-bold text-slate-900 text-[12px]">{{ $transaction->va_biller_code }}</span>
+            </div>
+            @endif
         </div>
 
         <div class="thermal-divider"></div>
@@ -292,7 +355,7 @@
             <!-- Metode & Nominal Bayar -->
             <div class="space-y-1.5 pt-0.5">
                 <div class="flex justify-between text-slate-700 font-semibold" id="rowPayment">
-                    <span>Metode Bayar ({{ strtoupper($transaction->payment_method) }}):</span>
+                    <span>Metode Bayar ({{ $transaction->payment_method === 'va' ? 'VIRTUAL ACCOUNT' : strtoupper($transaction->payment_method) }}):</span>
                     <span class="font-mono font-bold text-slate-950 text-[13px]">Rp {{ number_format($transaction->pay_amount, 0, ',', '.') }}</span>
                 </div>
 
@@ -382,6 +445,16 @@
 
     </div>
 
+    @if($isReadOnlyUser)
+    <script>
+        // Nonaktifkan pintasan cetak browser (Ctrl+P / Cmd+P) untuk role pengguna
+        window.addEventListener('keydown', function (e) {
+            if ((e.ctrlKey || e.metaKey) && (e.key === 'p' || e.key === 'P')) {
+                e.preventDefault();
+            }
+        });
+    </script>
+    @else
     <!-- MODAL DRAWER: PENGATURAN KUSTOMISASI NOTA (NO PRINT) -->
     <div id="settingsModal" class="no-print fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 hidden">
         <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto">
@@ -825,5 +898,6 @@
         // Jalankan inisialisasi saat window load
         window.addEventListener('DOMContentLoaded', loadSettings);
     </script>
+    @endif
 </body>
 </html>

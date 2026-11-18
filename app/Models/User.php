@@ -68,6 +68,14 @@ class User extends Authenticatable
     }
 
     /**
+     * Check if user is regular user / pengguna
+     */
+    public function isUser(): bool
+    {
+        return $this->role === 'user';
+    }
+
+    /**
      * Transaksi yang ditangani oleh user/kasir ini
      */
     public function transactions(): HasMany

@@ -199,9 +199,14 @@
                                     <div class="text-[10px] text-slate-400">Kasir: {{ $trx->user->name ?? 'Sistem' }}</div>
                                 </td>
                                 <td class="p-3.5">
-                                    <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase {{ $trx->payment_method === 'cash' ? 'bg-[#5DD62C]/20 text-[#337418] border border-[#5DD62C]/30' : ($trx->payment_method === 'qris' ? 'bg-[#202020] text-[#5DD62C] border border-[#2A2A2A]' : 'bg-slate-100 text-slate-800 border border-slate-200') }}">
-                                        {{ $trx->payment_method }}
+                                    <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase {{ $trx->payment_method === 'cash' ? 'bg-[#5DD62C]/20 text-[#337418] border border-[#5DD62C]/30' : 'bg-[#202020] text-[#5DD62C] border border-[#2A2A2A]' }}">
+                                        {{ $trx->payment_method_label }}
                                     </span>
+                                    @if(!$trx->isPaid())
+                                        <span class="block mt-1 text-[10px] font-bold {{ $trx->isPending() ? 'text-amber-600' : 'text-rose-600' }}">
+                                            {{ $trx->isPending() ? 'Menunggu Bayar' : ucfirst($trx->payment_status) }}
+                                        </span>
+                                    @endif
                                 </td>
                                 <td class="p-3.5 font-black text-[#0F0F0F]">
                                     Rp {{ number_format($trx->total_price, 0, ',', '.') }}

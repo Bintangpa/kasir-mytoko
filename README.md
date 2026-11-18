@@ -15,6 +15,7 @@ mytokogue/
 │   │   ├── Controllers/                              # Pengendali alur request & response HTTP
 │   │   │   ├── AuthController.php                    # Autentikasi pengguna (login, logout, session)
 │   │   │   ├── Controller.php                        # Base Controller bawaan Laravel
+│   │   │   ├── MidtransWebhookController.php         # Endpoint webhook notifikasi pembayaran Midtrans (SHA-512)
 │   │   │   ├── TransactionReceiptController.php      # Render cetak struk thermal & pengaturan ukuran nota (80mm / 58mm)
 │   │   │   ├── Admin/                                # Controller khusus peran Administrator
 │   │   │   │   ├── AdminDashboardController.php      # Dashboard metrik penjualan & statistik performa toko
@@ -22,12 +23,14 @@ mytokogue/
 │   │   │   │   ├── ProductController.php             # CRUD produk, harga, barcode, dan manajemen stok
 │   │   │   │   ├── ReportController.php              # Laporan penjualan dan filter analitik
 │   │   │   │   └── UserController.php                # Manajemen akun kasir dan admin toko
-│   │   │   └── Kasir/                                # Controller khusus peran Kasir
-│   │   │       ├── KasirDashboardController.php      # Dashboard ringkasan shift kasir yang sedang bertugas
-│   │   │       ├── PosController.php                 # Mesin Kasir / Point of Sale & pemrosesan checkout
-│   │   │       └── TransactionHistoryController.php  # Riwayat transaksi penjualan kasir
+│   │   │   ├── Kasir/                                # Controller khusus peran Kasir
+│   │   │   │   ├── KasirDashboardController.php      # Dashboard ringkasan shift kasir yang sedang bertugas
+│   │   │   │   ├── PosController.php                 # Mesin Kasir / Point of Sale & pemrosesan checkout
+│   │   │   │   └── TransactionHistoryController.php  # Riwayat transaksi penjualan kasir
+│   │   │   └── User/                                 # Controller khusus peran User / Pengguna
+│   │   │       └── UserShopController.php            # Katalog produk (hanya lihat), pembayaran mandiri & riwayat
 │   │   └── Middleware/
-│   │       └── RoleMiddleware.php                    # Proteksi hak akses route berdasarkan peran (admin / kasir)
+│   │       └── RoleMiddleware.php                    # Proteksi hak akses route berdasarkan peran (admin / kasir / user)
 │   ├── Models/                                       # Model Eloquent ORM & relasi database
 │   │   ├── Category.php                              # Model data kategori produk
 │   │   ├── Product.php                               # Model data produk (kode/SKU, nama, harga, stok)
@@ -91,6 +94,13 @@ mytokogue/
 │       │   │   └── index.blade.php                   # Mesin kasir interaktif (katalog, keranjang, uang pas, checkout)
 │       │   └── transactions/
 │       │       └── index.blade.php                   # Riwayat transaksi kasir yang bertugas
+│       ├── user/                                     # Modul Antarmuka User / Pengguna
+│       │   ├── products/
+│       │   │   └── index.blade.php                   # Katalog produk full-width (hanya lihat & tambah ke troli)
+│       │   ├── cart/
+│       │   │   └── index.blade.php                   # Halaman khusus keranjang belanja & pembayaran mandiri
+│       │   └── transactions/
+│       │       └── index.blade.php                   # Riwayat pembelian & bukti bayar pengguna
 │       └── receipts/
 │           └── print.blade.php                       # Preview struk thermal (80mm & 58mm) & printer setup
 │
@@ -145,6 +155,7 @@ mytokogue/
    - Pemisahan hak akses berbasis peran (*Role-Based Access Control*):
      - **Admin**: Akses penuh ke seluruh fitur toko, produk, kategori, user, laporan, dan POS.
      - **Kasir**: Akses fokus ke POS penjualan, riwayat transaksi kasir bersangkutan, dan dashboard shift.
+     - **User / Pengguna**: Hanya melihat katalog & detail produk (read-only), melakukan pembayaran non-tunai (QRIS & Virtual Account / VA), serta melihat riwayat pembelian dan struk digital miliknya sendiri (hanya lihat, tanpa cetak).
    - Keamanan terhadap benturan nomor invoice ganda (*lock / auto-retry generator*).
 
 ---
@@ -171,6 +182,7 @@ Saat seeder database dijalankan, akun demo berikut langsung siap digunakan:
 |---|---|---|---|
 | **Admin Toko** | `admin@mytoko.com` | `password` | Akses penuh (Dashboard Admin, Produk, Kategori, User, Laporan, POS) |
 | **Kasir Utama** | `kasir@mytoko.com` | `password` | Akses khusus (POS Kasir, Shift Dashboard, Riwayat Transaksi Saya) |
+| **Pengguna (User)** | `user@mytoko.com` | `password` | Lihat produk (read-only), lakukan pembayaran, dan lihat riwayat pembelian sendiri |
 
 > **Catatan:** Pada halaman login telah disediakan tombol **1-Klik Akun Demo** untuk mengisi form secara instan tanpa perlu mengetik manual.
 

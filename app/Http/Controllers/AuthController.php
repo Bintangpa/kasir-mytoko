@@ -15,9 +15,15 @@ class AuthController extends Controller
     public function showLogin(): View|RedirectResponse
     {
         if (Auth::check()) {
-            return Auth::user()->role === 'admin'
-                ? redirect()->route('admin.dashboard')
-                : redirect()->route('kasir.dashboard');
+            if (Auth::user()->isAdmin()) {
+                return redirect()->route('admin.dashboard');
+            }
+
+            if (Auth::user()->isKasir()) {
+                return redirect()->route('kasir.dashboard');
+            }
+
+            return redirect()->route('user.products.index');
         }
 
         return view('auth.login');
@@ -59,8 +65,13 @@ class AuthController extends Controller
                     ->with('success', 'Selamat datang kembali, Administrator ' . $user->name . '!');
             }
 
-            return redirect()->intended(route('kasir.dashboard'))
-                ->with('success', 'Selamat bertugas, Kasir ' . $user->name . '!');
+            if ($user->role === 'kasir') {
+                return redirect()->intended(route('kasir.dashboard'))
+                    ->with('success', 'Selamat bertugas, Kasir ' . $user->name . '!');
+            }
+
+            return redirect()->intended(route('user.products.index'))
+                ->with('success', 'Selamat datang, ' . $user->name . '! Silakan lihat produk dan lakukan pembayaran.');
         }
 
         return back()->withErrors([

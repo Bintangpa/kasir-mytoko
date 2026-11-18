@@ -18,6 +18,7 @@ class ReportController extends Controller
         $startDate = $request->input('start_date', Carbon::today()->startOfMonth()->toDateString());
         $endDate = $request->input('end_date', Carbon::today()->toDateString());
         $userId = $request->input('user_id');
+        $paymentStatus = $request->input('payment_status');
 
         $startDateTime = Carbon::parse($startDate)->startOfDay();
         $endDateTime = Carbon::parse($endDate)->endOfDay();
@@ -29,12 +30,17 @@ class ReportController extends Controller
             $query->where('user_id', $userId);
         }
 
-        // Hitung Summary Statistik
-        $totalTransactions = (clone $query)->count();
-        $totalSales = (clone $query)->sum('total_price');
+        if ($paymentStatus) {
+            $query->where('payment_status', $paymentStatus);
+        }
 
-        // Hitung Total Modal (HPP) dalam periode ini
-        $transactionIds = (clone $query)->pluck('id');
+        // Hitung Summary Statistik Keuangan (khusus transaksi berstatus LUNAS / paid)
+        $paidQuery = (clone $query)->paid();
+        $totalTransactions = (clone $paidQuery)->count();
+        $totalSales = (clone $paidQuery)->sum('total_price');
+
+        // Hitung Total Modal (HPP) dalam periode ini (khusus transaksi lunas)
+        $transactionIds = (clone $paidQuery)->pluck('id');
         $totalCost = TransactionItem::whereIn('transaction_id', $transactionIds)
             ->select(DB::raw('SUM(cost_price * quantity) as total_cost'))
             ->value('total_cost') ?? 0;
@@ -45,8 +51,8 @@ class ReportController extends Controller
         // Ambil data transaksi dengan paginasi
         $transactions = $query->latest()->paginate(15)->withQueryString();
 
-        // Kasir list untuk filter dropdown
-        $cashiers = User::where('role', 'kasir')->orderBy('name')->get();
+        // Daftar akun kasir/admin/pengguna untuk filter dropdown
+        $cashiers = User::orderBy('name')->get();
 
         return view('admin.reports.index', compact(
             'transactions',
@@ -54,6 +60,7 @@ class ReportController extends Controller
             'startDate',
             'endDate',
             'userId',
+            'paymentStatus',
             'totalTransactions',
             'totalSales',
             'totalCost',

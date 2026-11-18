@@ -29,11 +29,13 @@ class TransactionHistoryController extends Controller
 
         $transactions = $query->latest()->paginate(15)->withQueryString();
 
-        $dailyTotal = Transaction::where('user_id', $userId)
+        $dailyTotal = Transaction::paid()
+            ->where('user_id', $userId)
             ->whereDate('created_at', $date)
             ->sum('total_price');
 
-        $dailyCount = Transaction::where('user_id', $userId)
+        $dailyCount = Transaction::paid()
+            ->where('user_id', $userId)
             ->whereDate('created_at', $date)
             ->count();
 

@@ -69,6 +69,8 @@
         ::-webkit-scrollbar-track { background: #F8F8F8; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 
     @stack('styles')
@@ -76,11 +78,14 @@
 <body class="bg-[#F8F8F8] text-[#0F0F0F] min-h-screen flex flex-col antialiased">
 
     <div class="flex h-screen overflow-hidden">
+        <!-- Mobile Sidebar Backdrop Overlay -->
+        <div id="sidebarOverlay" class="fixed inset-0 z-30 bg-[#0F0F0F]/70 backdrop-blur-[1px] hidden lg:hidden transition-opacity"></div>
+
         <!-- SIDEBAR (Menggunakan #202020 Surface & #0F0F0F Brand Bar) -->
         <aside id="sidebar" class="fixed inset-y-0 left-0 z-40 w-64 bg-[#202020] text-slate-300 flex flex-col transition-transform duration-300 -translate-x-full lg:translate-x-0 lg:static lg:inset-auto border-r border-[#2A2A2A]">
             <!-- Brand Logo -->
             <div class="flex items-center justify-between h-16 px-6 bg-[#0F0F0F] border-b border-[#2A2A2A]">
-                <a href="{{ auth()->user()->isAdmin() ? route('admin.dashboard') : route('kasir.dashboard') }}" class="flex items-center gap-3">
+                <a href="{{ auth()->user()->isAdmin() ? route('admin.dashboard') : (auth()->user()->isKasir() ? route('kasir.dashboard') : route('user.products.index')) }}" class="flex items-center gap-3">
                     <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#337418] to-[#5DD62C] flex items-center justify-center text-[#0F0F0F] font-black shadow-md shadow-[#5DD62C]/20">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
@@ -156,7 +161,7 @@
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
                         <span>Buka Kasir (POS)</span>
                     </a>
-                @else
+                @elseif(auth()->user()->isKasir())
                     <!-- KASIR MENU -->
                     <div class="px-3 pb-1 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Menu Kasir</div>
                     
@@ -179,6 +184,27 @@
                     <a href="{{ route('receipt.settings') }}" target="_blank" class="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:bg-[#2A2A2A] hover:text-[#5DD62C] transition-colors">
                         <i class="fa-solid fa-sliders text-xs text-[#5DD62C]"></i>
                         <span>Setting Format Nota (80mm)</span>
+                    </a>
+                @else
+                    <!-- USER / PENGGUNA MENU -->
+                    <div class="px-3 pb-1 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Menu Pengguna</div>
+
+                    <a href="{{ route('user.products.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all {{ request()->routeIs('user.products.*') ? 'bg-[#5DD62C] text-[#0F0F0F] shadow-sm font-black' : 'text-slate-300 hover:bg-[#2A2A2A] hover:text-[#5DD62C]' }}">
+                        <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+                        <span>Katalog Produk</span>
+                    </a>
+
+                    <a href="{{ route('user.cart') }}" class="flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all {{ request()->routeIs('user.cart') ? 'bg-[#5DD62C] text-[#0F0F0F] shadow-sm font-black' : 'text-slate-300 hover:bg-[#2A2A2A] hover:text-[#5DD62C]' }}">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <i class="fa-solid fa-cart-shopping w-5 text-center text-base shrink-0"></i>
+                            <span class="truncate">Keranjang & Bayar</span>
+                        </div>
+                        <span id="sidebarCartBadge" class="hidden px-2 py-0.5 rounded-full text-[10px] font-black {{ request()->routeIs('user.cart') ? 'bg-[#0F0F0F] text-[#5DD62C]' : 'bg-[#5DD62C] text-[#0F0F0F]' }}">0</span>
+                    </a>
+
+                    <a href="{{ route('user.transactions.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all {{ request()->routeIs('user.transactions.*') ? 'bg-[#5DD62C] text-[#0F0F0F] shadow-sm font-black' : 'text-slate-300 hover:bg-[#2A2A2A] hover:text-[#5DD62C]' }}">
+                        <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+                        <span>Riwayat Pembelian Saya</span>
                     </a>
                 @endif
             </nav>
@@ -214,6 +240,20 @@
                         <a href="{{ route('kasir.pos') }}" class="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-[#5DD62C]/15 text-[#337418] hover:bg-[#5DD62C] hover:text-[#0F0F0F] border border-[#5DD62C]/30 transition-all">
                             <svg class="w-4 h-4 text-[#337418]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
                             <span>Buka POS</span>
+                        </a>
+                    @endif
+
+                    <!-- Tombol Icon Troli Keranjang & Bayar (Khusus Role User / Pengguna) -->
+                    @if(auth()->user()->isUser())
+                        <a href="{{ route('user.cart') }}"
+                           class="relative inline-flex items-center justify-center w-10 h-10 rounded-xl transition-all border {{ request()->routeIs('user.cart') ? 'bg-[#5DD62C] text-[#0F0F0F] border-[#5DD62C] shadow-sm' : 'bg-[#F8F8F8] hover:bg-[#5DD62C]/20 text-[#0F0F0F] hover:text-[#337418] border-slate-200 hover:border-[#5DD62C]/50' }}"
+                           title="Keranjang & Pembayaran"
+                           aria-label="Keranjang & Pembayaran">
+                            <i class="fa-solid fa-cart-shopping text-sm"></i>
+                            <span id="navbarCartBadge"
+                                  class="hidden absolute -top-1.5 -right-1.5 min-w-[20px] h-5 px-1 rounded-full bg-[#0F0F0F] text-[#5DD62C] border-2 border-white text-[10px] font-black items-center justify-center shadow-xs">
+                                0
+                            </span>
                         </a>
                     @endif
 
@@ -267,7 +307,7 @@
             </div>
 
             <!-- Page Body -->
-            <main class="flex-1 overflow-y-auto px-4 sm:px-6 pb-8">
+            <main class="flex-1 overflow-y-auto px-3 sm:px-6 pb-8">
                 @yield('content')
             </main>
         </div>
@@ -276,19 +316,78 @@
     <!-- Script Drawer Sidebar Mobile -->
     <script>
         const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
         const openBtn = document.getElementById('openSidebar');
         const closeBtn = document.getElementById('closeSidebar');
 
-        if (openBtn && sidebar) {
-            openBtn.addEventListener('click', () => {
-                sidebar.classList.remove('-translate-x-full');
-            });
+        function openMobileSidebar() {
+            if (sidebar) sidebar.classList.remove('-translate-x-full');
+            if (sidebarOverlay) sidebarOverlay.classList.remove('hidden');
         }
-        if (closeBtn && sidebar) {
-            closeBtn.addEventListener('click', () => {
-                sidebar.classList.add('-translate-x-full');
-            });
+
+        function closeMobileSidebar() {
+            if (sidebar) sidebar.classList.add('-translate-x-full');
+            if (sidebarOverlay) sidebarOverlay.classList.add('hidden');
         }
+
+        if (openBtn) openBtn.addEventListener('click', openMobileSidebar);
+        if (closeBtn) closeBtn.addEventListener('click', closeMobileSidebar);
+        if (sidebarOverlay) sidebarOverlay.addEventListener('click', closeMobileSidebar);
+
+        @if(auth()->user()->isUser())
+        window.USER_CART_STORAGE_KEY = 'mytokogue_user_cart_{{ auth()->id() }}';
+
+        window.getUserCart = function() {
+            try {
+                const raw = localStorage.getItem(window.USER_CART_STORAGE_KEY);
+                const parsed = raw ? JSON.parse(raw) : [];
+                return Array.isArray(parsed) ? parsed : [];
+            } catch (e) {
+                return [];
+            }
+        };
+
+        window.saveUserCart = function(items) {
+            try {
+                localStorage.setItem(window.USER_CART_STORAGE_KEY, JSON.stringify(items || []));
+            } catch (e) {}
+            window.syncUserCartBadges(items);
+        };
+
+        window.syncUserCartBadges = function(itemsArg) {
+            const items = Array.isArray(itemsArg) ? itemsArg : window.getUserCart();
+            const totalQty = items.reduce((sum, item) => sum + (parseInt(item.qty, 10) || 0), 0);
+
+            const navBadge = document.getElementById('navbarCartBadge');
+            if (navBadge) {
+                navBadge.textContent = totalQty > 99 ? '99+' : totalQty;
+                if (totalQty > 0) {
+                    navBadge.classList.remove('hidden');
+                    navBadge.classList.add('flex');
+                } else {
+                    navBadge.classList.add('hidden');
+                    navBadge.classList.remove('flex');
+                }
+            }
+
+            const sideBadge = document.getElementById('sidebarCartBadge');
+            if (sideBadge) {
+                sideBadge.textContent = totalQty > 99 ? '99+' : totalQty;
+                if (totalQty > 0) {
+                    sideBadge.classList.remove('hidden');
+                } else {
+                    sideBadge.classList.add('hidden');
+                }
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', () => window.syncUserCartBadges());
+        window.addEventListener('storage', (e) => {
+            if (e.key === window.USER_CART_STORAGE_KEY) {
+                window.syncUserCartBadges();
+            }
+        });
+        @endif
     </script>
 
     @stack('scripts')
