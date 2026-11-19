@@ -35,11 +35,10 @@ return [
         ],
     ],
 
-    'midtrans' => [
-        'merchant_id' => env('MIDTRANS_MERCHANT_ID'),
-        'server_key' => env('MIDTRANS_SERVER_KEY'),
-        'client_key' => env('MIDTRANS_CLIENT_KEY'),
-        'is_production' => filter_var(env('MIDTRANS_IS_PRODUCTION', false), FILTER_VALIDATE_BOOLEAN),
+    'duitku' => [
+        'merchant_code' => env('DUITKU_MERCHANT_CODE', 'DS38179'),
+        'api_key' => env('DUITKU_API_KEY', '3290a37b1465e4425812db7d33430b57'),
+        'is_production' => filter_var(env('DUITKU_IS_PRODUCTION', false), FILTER_VALIDATE_BOOLEAN),
     ],
 
 ];

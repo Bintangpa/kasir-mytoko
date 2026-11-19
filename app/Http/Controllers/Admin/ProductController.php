@@ -7,6 +7,7 @@ use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 
@@ -61,6 +62,7 @@ class ProductController extends Controller
             'stock' => ['required', 'integer', 'min:0'],
             'unit' => ['required', 'string', 'max:30'],
             'description' => ['nullable', 'string'],
+            'image' => ['nullable', 'file', 'mimes:jpeg,png,jpg,webp', 'max:2048'],
         ], [
             'name.required' => 'Nama produk wajib diisi.',
             'code.unique' => 'Kode produk/barcode sudah digunakan.',
@@ -68,11 +70,22 @@ class ProductController extends Controller
             'price.required' => 'Harga jual wajib diisi.',
             'stock.required' => 'Stok produk wajib diisi.',
             'unit.required' => 'Satuan produk wajib diisi.',
+            'image.file' => 'File foto yang dipilih tidak valid.',
+            'image.mimes' => 'Format foto harus berupa JPG, JPEG, PNG, atau WEBP.',
+            'image.max' => 'Ukuran foto maksimal adalah 2 MB.',
         ]);
 
         if (empty($validated['code'])) {
             $validated['code'] = 'PRD-' . strtoupper(Str::random(6));
         }
+
+        if ($request->hasFile('image') && $request->file('image')->isValid()) {
+            $file = $request->file('image');
+            $validated['image_data'] = base64_encode(file_get_contents($file->getRealPath()));
+            $validated['image_mime'] = $file->getMimeType();
+            $validated['image_size'] = $file->getSize();
+        }
+        unset($validated['image']);
 
         Product::create($validated);
 
@@ -97,6 +110,8 @@ class ProductController extends Controller
             'unit' => ['required', 'string', 'max:30'],
             'description' => ['nullable', 'string'],
             'is_active' => ['nullable', 'boolean'],
+            'image' => ['nullable', 'file', 'mimes:jpeg,png,jpg,webp', 'max:2048'],
+            'remove_image' => ['nullable', 'boolean'],
         ], [
             'name.required' => 'Nama produk wajib diisi.',
             'code.required' => 'Kode produk/barcode wajib diisi.',
@@ -104,9 +119,25 @@ class ProductController extends Controller
             'cost_price.required' => 'Harga modal/beli wajib diisi.',
             'price.required' => 'Harga jual wajib diisi.',
             'stock.required' => 'Stok produk wajib diisi.',
+            'unit.required' => 'Satuan produk wajib diisi.',
+            'image.file' => 'File foto yang dipilih tidak valid.',
+            'image.mimes' => 'Format foto harus berupa JPG, JPEG, PNG, atau WEBP.',
+            'image.max' => 'Ukuran foto maksimal adalah 2 MB.',
         ]);
 
         $validated['is_active'] = $request->has('is_active');
+
+        if ($request->boolean('remove_image')) {
+            $validated['image_data'] = null;
+            $validated['image_mime'] = null;
+            $validated['image_size'] = null;
+        } elseif ($request->hasFile('image') && $request->file('image')->isValid()) {
+            $file = $request->file('image');
+            $validated['image_data'] = base64_encode(file_get_contents($file->getRealPath()));
+            $validated['image_mime'] = $file->getMimeType();
+            $validated['image_size'] = $file->getSize();
+        }
+        unset($validated['image'], $validated['remove_image']);
 
         $product->update($validated);
 
@@ -117,5 +148,23 @@ class ProductController extends Controller
     {
         $product->delete();
         return redirect()->route('admin.products.index')->with('success', 'Produk berhasil dihapus.');
+    }
+
+    /**
+     * Stream foto produk langsung dari database
+     */
+    public function image(Product $product): Response
+    {
+        if (empty($product->image_data) || empty($product->image_mime)) {
+            abort(404);
+        }
+
+        $binary = base64_decode($product->image_data);
+
+        return response($binary, 200, [
+            'Content-Type' => $product->image_mime,
+            'Content-Length' => strlen($binary),
+            'Cache-Control' => 'public, max-age=86400, stale-while-revalidate=604800',
+        ]);
     }
 }

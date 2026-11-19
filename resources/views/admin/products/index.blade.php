@@ -76,8 +76,22 @@
                             <td class="p-3.5 pl-5 font-mono font-bold text-[#337418]">
                                 {{ $prod->code }}
                             </td>
-                            <td class="p-3.5 font-bold text-[#0F0F0F]">
-                                {{ $prod->name }}
+                            <td class="p-3.5">
+                                <div class="flex items-center gap-2.5">
+                                    @if($prod->has_image)
+                                        <img src="{{ route('products.image', $prod->id) }}" alt="{{ $prod->name }}" class="w-9 h-9 rounded-xl object-cover border border-slate-200 shrink-0 shadow-2xs">
+                                    @else
+                                        <div class="w-9 h-9 rounded-xl bg-[#F8F8F8] border border-slate-200/80 flex items-center justify-center text-slate-300 shrink-0">
+                                            <i class="fa-solid fa-box text-xs"></i>
+                                        </div>
+                                    @endif
+                                    <div class="min-w-0">
+                                        <span class="block text-xs font-bold text-[#0F0F0F] truncate">{{ $prod->name }}</span>
+                                        @if($prod->description)
+                                            <span class="block text-[10px] text-slate-400 font-normal truncate max-w-xs">{{ $prod->description }}</span>
+                                        @endif
+                                    </div>
+                                </div>
                             </td>
                             <td class="p-3.5">
                                 <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#F8F8F8] text-slate-700 border border-slate-200">

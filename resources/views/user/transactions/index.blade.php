@@ -4,13 +4,13 @@
 @section('header-title', 'Riwayat Pembelian')
 
 @section('content')
-<div class="space-y-4 sm:space-y-6 pt-1 sm:pt-2 pb-6">
+<div class="space-y-4 sm:space-y-6 pt-1 sm:pt-2 pb-28 sm:pb-8">
 
     <!-- Filter & Header Bar (Responsif Mobile) -->
     <div class="bg-white p-4 sm:p-5 rounded-2xl sm:rounded-3xl border border-slate-200/90 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3.5 sm:gap-4">
         <div class="min-w-0">
             <h2 class="text-sm sm:text-base font-black text-[#0F0F0F] truncate">Riwayat Pembelian: {{ auth()->user()->name }}</h2>
-            <p class="text-[11px] sm:text-xs text-slate-500 mt-0.5">Pantau status pembayaran Virtual Account (Midtrans) dan riwayat belanja Anda.</p>
+            <p class="text-[11px] sm:text-xs text-slate-500 mt-0.5">Pantau status pembayaran Virtual Account (Duitku) dan riwayat belanja Anda.</p>
         </div>
 
         <form method="GET" action="{{ route('user.transactions.index') }}" class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
@@ -112,7 +112,7 @@
 
                     <div class="flex items-center gap-1.5">
                         @if($trx->isPending())
-                            <a href="{{ \App\Services\MidtransService::simulatorUrl($trx->va_bank) }}" target="_blank"
+                            <a href="{{ $trx->payment_url ?: 'https://sandbox.duitku.com' }}" target="_blank"
                                 class="inline-flex items-center gap-1 px-2.5 py-2 text-[11px] font-bold text-white bg-[#202020] hover:bg-[#0F0F0F] rounded-xl transition-all">
                                 <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-[#5DD62C]"></i>
                                 <span>Simulator</span>
@@ -206,9 +206,9 @@
                             <td class="p-3.5 pr-5 text-right whitespace-nowrap">
                                 @if($trx->isPending())
                                     <div class="inline-flex items-center gap-1.5">
-                                        <a href="{{ \App\Services\MidtransService::simulatorUrl($trx->va_bank) }}" target="_blank"
+                                        <a href="{{ $trx->payment_url ?: 'https://sandbox.duitku.com' }}" target="_blank"
                                             class="inline-flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-bold text-white bg-[#202020] hover:bg-[#0F0F0F] rounded-lg transition-all"
-                                            title="Buka Simulator Midtrans Sandbox">
+                                            title="Buka Simulator Duitku Sandbox">
                                             <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-[#5DD62C]"></i>
                                             <span>Simulator</span>
                                         </a>
@@ -278,7 +278,7 @@
 
             const data = await res.json();
             if (!res.ok || !data.success) {
-                throw new Error(data.message || 'Gagal mengecek status ke Midtrans Sandbox.');
+                throw new Error(data.message || 'Gagal mengecek status ke Duitku Sandbox.');
             }
 
             notice.classList.remove('hidden');

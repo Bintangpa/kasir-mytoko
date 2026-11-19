@@ -26,6 +26,8 @@ class Transaction extends Model
         'va_bank',
         'va_number',
         'va_biller_code',
+        'qr_string',
+        'payment_url',
         'gateway_transaction_id',
         'payment_expired_at',
         'paid_at',

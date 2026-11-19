@@ -4,7 +4,7 @@
 @section('header-title', 'Keranjang & Pembayaran')
 
 @section('content')
-<div class="space-y-4 sm:space-y-6 pt-1 sm:pt-2 pb-10">
+<div class="space-y-4 sm:space-y-6 pt-1 sm:pt-2 pb-28 sm:pb-12">
 
     <!-- HEADER BAR KERANJANG -->
     <div class="bg-white p-4 sm:p-5 rounded-2xl sm:rounded-3xl border border-slate-200/90 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -115,31 +115,31 @@
                         </div>
                     </div>
 
-                    <!-- PANEL INFO QRIS -->
+                    <!-- PANEL INFO QRIS (TERINTEGRASI DUITKU SANDBOX) -->
                     <div id="qrisInfoBox" class="p-4 rounded-2xl bg-[#202020] text-white border border-[#2E2E2E] space-y-2">
                         <div class="flex items-center justify-between gap-2">
                             <div class="flex items-center gap-2 font-black text-xs text-[#5DD62C]">
                                 <i class="fa-solid fa-qrcode text-sm"></i>
-                                <span>Pembayaran Instan QRIS</span>
+                                <span>QRIS (Duitku Sandbox)</span>
                             </div>
-                            <span class="px-2 py-0.5 rounded-md bg-[#5DD62C]/15 text-[#5DD62C] text-[10px] font-bold border border-[#5DD62C]/30">Otomatis Pas</span>
+                            <span class="px-2 py-0.5 rounded-md bg-[#5DD62C]/15 text-[#5DD62C] text-[10px] font-bold border border-[#5DD62C]/30">Live API</span>
                         </div>
                         <p class="text-[11px] text-slate-300 leading-relaxed">
-                            Mendukung seluruh e-wallet & mobile banking. Nominal pembayaran otomatis tepat sesuai total tagihan.
+                            Kode QRIS resmi akan dibuat langsung oleh <strong class="text-white">Duitku Sandbox</strong>. Anda dapat scan QR atau klik tombol simulator Duitku untuk simulasi pelunasan instan.
                         </p>
                     </div>
 
-                    <!-- PANEL INFO VIRTUAL ACCOUNT (TERINTEGRASI MIDTRANS SANDBOX) -->
+                    <!-- PANEL INFO VIRTUAL ACCOUNT (TERINTEGRASI DUITKU SANDBOX) -->
                     <div id="vaInfoBox" class="hidden p-4 rounded-2xl bg-[#202020] text-white border border-[#2E2E2E] space-y-3">
                         <div class="flex items-center justify-between gap-2">
                             <div class="flex items-center gap-2 font-black text-xs text-[#5DD62C]">
                                 <i class="fa-solid fa-building-columns text-sm"></i>
-                                <span>Virtual Account (Midtrans Sandbox)</span>
+                                <span>Virtual Account (Duitku Sandbox)</span>
                             </div>
                             <span class="px-2 py-0.5 rounded-md bg-[#5DD62C]/15 text-[#5DD62C] text-[10px] font-bold border border-[#5DD62C]/30">Live API</span>
                         </div>
 
-                        <!-- Pilihan Bank VA Midtrans -->
+                        <!-- Pilihan Bank VA Duitku -->
                         <div class="space-y-1.5">
                             <span class="block text-[10px] font-bold text-slate-400 uppercase">Pilih Bank Virtual Account:</span>
                             <div class="grid grid-cols-3 sm:grid-cols-5 gap-1.5" id="vaBankGroup">
@@ -159,7 +159,7 @@
                         <div class="p-3 rounded-xl bg-[#0F0F0F] border border-[#2E2E2E] text-[11px] text-slate-300 leading-relaxed flex items-start gap-2">
                             <i class="fa-solid fa-circle-info text-[#5DD62C] mt-0.5 shrink-0"></i>
                             <span>
-                                Nomor Virtual Account resmi akan dibuat langsung oleh <strong class="text-white">Midtrans Sandbox</strong> setelah Anda klik tombol bayar. Anda dapat mensimulasikan pembayaran di Simulator Midtrans lalu klik <em>Cek Status</em>.
+                                Nomor Virtual Account resmi dibuat langsung oleh <strong class="text-white">Duitku Sandbox</strong> setelah Anda klik tombol bayar. Anda dapat mensimulasikan pembayaran di Simulator Duitku lalu klik <em>Cek Status</em>.
                             </span>
                         </div>
                     </div>
@@ -190,7 +190,7 @@
 
 </div>
 
-<!-- MODAL MENUNGGU PEMBAYARAN VIRTUAL ACCOUNT (MIDTRANS SANDBOX) -->
+<!-- MODAL MENUNGGU PEMBAYARAN VIRTUAL ACCOUNT (DUITKU SANDBOX) -->
 <div id="vaPendingModal" class="fixed inset-0 z-50 bg-[#0F0F0F]/85 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 hidden">
     <div class="bg-white rounded-t-3xl sm:rounded-3xl max-w-md w-full overflow-hidden shadow-2xl border border-slate-200 max-h-[92vh] flex flex-col">
         <div class="p-4 sm:p-5 bg-[#0F0F0F] text-white flex items-center justify-between border-b border-[#2A2A2A]">
@@ -199,7 +199,7 @@
                     <i class="fa-solid fa-hourglass-half text-sm"></i>
                 </div>
                 <div>
-                    <span class="text-[10px] font-bold uppercase tracking-wider text-[#5DD62C] block">Midtrans Sandbox VA</span>
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-[#5DD62C] block">Duitku Sandbox VA</span>
                     <h3 class="text-sm sm:text-base font-black">Menunggu Pembayaran</h3>
                 </div>
             </div>
@@ -207,11 +207,11 @@
         </div>
 
         <div class="p-4 sm:p-5 space-y-4 overflow-y-auto text-xs">
-            <!-- Biller Code (Khusus Mandiri) -->
+            <!-- Biller Code (Jika ada) -->
             <div id="vaModalBillerWrap" class="hidden p-3.5 rounded-2xl bg-[#F8F8F8] border border-slate-200 flex items-center justify-between gap-2">
                 <div>
-                    <span class="text-[10px] font-bold text-slate-400 uppercase block">Kode Perusahaan (Biller Code)</span>
-                    <span id="vaModalBillerCode" class="font-mono text-base font-black text-[#0F0F0F] tracking-wider">70012</span>
+                    <span class="text-[10px] font-bold text-slate-400 uppercase block">Kode Perusahaan / Biller</span>
+                    <span id="vaModalBillerCode" class="font-mono text-base font-black text-[#0F0F0F] tracking-wider">-</span>
                 </div>
                 <button type="button" onclick="copyText('vaModalBillerCode', this)"
                     class="px-3 py-1.5 rounded-xl bg-[#0F0F0F] hover:bg-[#5DD62C] text-white hover:text-[#0F0F0F] text-[11px] font-black transition-colors">
@@ -219,10 +219,10 @@
                 </button>
             </div>
 
-            <!-- Nomor Virtual Account Asli Midtrans -->
+            <!-- Nomor Virtual Account Asli Duitku -->
             <div class="p-4 rounded-2xl bg-[#0F0F0F] text-white border border-[#2A2A2A] space-y-2">
                 <div class="flex items-center justify-between">
-                    <span id="vaModalBankTitle" class="text-[10px] font-bold text-[#5DD62C] uppercase tracking-wider">Virtual Account BCA</span>
+                    <span id="vaModalBankTitle" class="text-[10px] font-bold text-[#5DD62C] uppercase tracking-wider">Virtual Account</span>
                     <span class="px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-300 text-[10px] font-bold">Pending</span>
                 </div>
                 <div class="flex items-center justify-between gap-2">
@@ -240,16 +240,19 @@
                     <span class="text-slate-500 font-semibold">Total Pembayaran</span>
                     <span id="vaModalTotal" class="font-black text-sm text-[#337418]">Rp 0</span>
                 </div>
-                <div class="flex justify-between">
+                <div class="flex justify-between items-center">
                     <span class="text-slate-500 font-semibold">Berlaku Hingga</span>
-                    <span id="vaModalExpiry" class="font-bold text-[#0F0F0F]">-</span>
+                    <div class="text-right">
+                        <span id="vaModalExpiry" class="font-bold text-[#0F0F0F] block">-</span>
+                        <span id="vaModalCountdown" class="text-[10px] font-black text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200 mt-0.5 hidden"></span>
+                    </div>
                 </div>
             </div>
 
             <!-- Pesan Status Cek Live -->
             <div id="vaStatusFeedback" class="hidden p-3 rounded-xl text-xs font-bold flex items-start gap-2"></div>
 
-            <!-- Aksi: Simulator Midtrans & Cek Status -->
+            <!-- Aksi: Simulator Duitku & Cek Status -->
             <div class="space-y-2 pt-1 pb-2 sm:pb-0">
                 <button type="button" id="btnCheckVaStatus" onclick="checkVaPaymentStatus()"
                     class="w-full py-3 px-4 bg-[#5DD62C] hover:bg-[#337418] text-[#0F0F0F] hover:text-white font-black text-xs rounded-xl shadow-md shadow-[#5DD62C]/25 transition-all flex items-center justify-center gap-2">
@@ -257,10 +260,95 @@
                     <span>Cek Status Pembayaran</span>
                 </button>
 
-                <a id="vaSimulatorLink" href="https://simulator.sandbox.midtrans.com/bca/va/index" target="_blank"
+                <a id="vaSimulatorLink" href="https://sandbox.duitku.com" target="_blank"
                    class="w-full py-2.5 px-4 bg-[#0F0F0F] hover:bg-[#202020] text-[#5DD62C] font-bold text-xs rounded-xl transition-all flex items-center justify-center gap-2 border border-[#2A2A2A]">
                     <i class="fa-solid fa-arrow-up-right-from-square text-[11px]"></i>
-                    <span>Bayar di Simulator Midtrans Sandbox</span>
+                    <span>Buka Halaman Pembayaran Duitku Sandbox</span>
+                </a>
+
+                <div class="grid grid-cols-2 gap-2 pt-1">
+                    <a href="{{ route('user.transactions.index') }}"
+                       class="py-2.5 px-3 bg-[#F8F8F8] hover:bg-slate-200 text-[#0F0F0F] font-bold text-xs rounded-xl transition-all border border-slate-200 text-center">
+                        Riwayat Transaksi
+                    </a>
+                    <a href="{{ route('user.products.index') }}"
+                       class="py-2.5 px-3 bg-[#F8F8F8] hover:bg-slate-200 text-[#0F0F0F] font-bold text-xs rounded-xl transition-all border border-slate-200 text-center">
+                        Kembali ke Katalog
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL MENUNGGU PEMBAYARAN QRIS (DUITKU SANDBOX) -->
+<div id="qrisPendingModal" class="fixed inset-0 z-50 bg-[#0F0F0F]/85 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 hidden">
+    <div class="bg-white rounded-t-3xl sm:rounded-3xl max-w-md w-full overflow-hidden shadow-2xl border border-slate-200 max-h-[92vh] flex flex-col">
+        <div class="p-4 sm:p-5 bg-[#0F0F0F] text-white flex items-center justify-between border-b border-[#2A2A2A]">
+            <div class="flex items-center gap-2.5">
+                <div class="w-9 h-9 rounded-xl bg-[#5DD62C]/20 text-[#5DD62C] border border-[#5DD62C]/30 flex items-center justify-center">
+                    <i class="fa-solid fa-qrcode text-base"></i>
+                </div>
+                <div>
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-[#5DD62C] block">Duitku Sandbox QRIS</span>
+                    <h3 class="text-sm sm:text-base font-black">Scan QR untuk Bayar</h3>
+                </div>
+            </div>
+            <span id="qrisModalInvoice" class="font-mono text-[11px] font-bold text-slate-300 bg-[#202020] px-2.5 py-1 rounded-lg border border-[#2E2E2E]">TRX-XXXX</span>
+        </div>
+
+        <div class="p-4 sm:p-5 space-y-4 overflow-y-auto text-xs text-center">
+            <!-- QRIS Code Image Container -->
+            <div class="p-4 rounded-2xl bg-[#F8F8F8] border border-slate-200 inline-block mx-auto shadow-inner">
+                <div class="bg-white p-3 rounded-xl border border-slate-200/80 shadow-xs">
+                    <img id="qrisModalImage" src="" alt="QRIS Code" class="w-48 h-48 sm:w-56 sm:h-56 mx-auto object-contain">
+                </div>
+                <div class="mt-2.5 flex items-center justify-center gap-2">
+                    <span class="text-[10px] font-black uppercase text-slate-700 tracking-wider">SHOPEEPAY QRIS (SP)</span>
+                    <span class="inline-block w-1.5 h-1.5 rounded-full bg-[#5DD62C]"></span>
+                    <span class="text-[10px] font-bold text-[#337418]">NMID Duitku Sandbox</span>
+                </div>
+            </div>
+
+            <!-- Total Pembayaran & Batas Waktu -->
+            <div class="bg-[#F8F8F8] p-3.5 rounded-2xl border border-slate-200 space-y-1.5 text-left">
+                <div class="flex justify-between">
+                    <span class="text-slate-500 font-semibold">Total Tagihan</span>
+                    <span id="qrisModalTotal" class="font-black text-sm text-[#337418]">Rp 0</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-slate-500 font-semibold">Berlaku Hingga</span>
+                    <div class="text-right">
+                        <span id="qrisModalExpiry" class="font-bold text-[#0F0F0F] block">-</span>
+                        <span id="qrisModalCountdown" class="text-[10px] font-black text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200 mt-0.5 hidden"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Petunjuk Simulator Sandbox Duitku -->
+            <div class="p-3 bg-emerald-50/90 border border-emerald-200/90 rounded-2xl text-[11px] text-emerald-950 text-left flex items-start gap-2.5">
+                <i class="fa-solid fa-circle-info text-[#337418] text-sm mt-0.5 shrink-0"></i>
+                <div class="leading-relaxed">
+                    <span class="font-black text-[#0F0F0F] block">Petunjuk Demo Simulator:</span>
+                    Di halaman simulator Duitku, pada pilihan <span class="font-bold text-slate-800">"Choose Payment Method"</span>, pilih <span class="font-black text-[#337418] bg-white px-1.5 py-0.5 rounded border border-emerald-300">SHOPEEPAY QRIS</span> agar tagihan ditemukan dan tombol bayar muncul.
+                </div>
+            </div>
+
+            <!-- Pesan Status Cek Live -->
+            <div id="qrisStatusFeedback" class="hidden p-3 rounded-xl text-xs font-bold text-left flex items-start gap-2"></div>
+
+            <!-- Aksi: Cek Status & Buka Simulator Duitku -->
+            <div class="space-y-2 pt-1 pb-2 sm:pb-0">
+                <button type="button" id="btnCheckQrisStatus" onclick="checkQrisPaymentStatus()"
+                    class="w-full py-3 px-4 bg-[#5DD62C] hover:bg-[#337418] text-[#0F0F0F] hover:text-white font-black text-xs rounded-xl shadow-md shadow-[#5DD62C]/25 transition-all flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-rotate"></i>
+                    <span>Cek Status Pembayaran</span>
+                </button>
+
+                <a id="qrisSimulatorLink" href="https://sandbox.duitku.com" target="_blank"
+                   class="w-full py-2.5 px-4 bg-[#0F0F0F] hover:bg-[#202020] text-[#5DD62C] font-bold text-xs rounded-xl transition-all flex items-center justify-center gap-2 border border-[#2A2A2A]">
+                    <i class="fa-solid fa-arrow-up-right-from-square text-[11px]"></i>
+                    <span>Buka Halaman Pembayaran / Simulator QRIS</span>
                 </a>
 
                 <div class="grid grid-cols-2 gap-2 pt-1">
@@ -339,6 +427,7 @@
     let activePaymentMethod = 'qris';
     let activeVaBank = 'bca';
     let pendingVaContext = null;
+    let pendingQrisContext = null;
 
     function formatNumber(num) {
         return new Intl.NumberFormat('id-ID').format(Math.round(num || 0));
@@ -368,6 +457,7 @@
                     category: prod.category ? prod.category.name : 'Umum',
                     name: prod.name,
                     unit: prod.unit || 'pcs',
+                    image_url: prod.image_url || null,
                     price: parseFloat(prod.price),
                     stock: prod.stock,
                     qty: clampedQty
@@ -464,15 +554,24 @@
             container.innerHTML = cart.map(item => `
                 <div class="pt-2.5 first:pt-0">
                     <div class="p-3 sm:p-4 bg-[#F8F8F8] border border-slate-200/80 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                        <div class="min-w-0 flex-1">
-                            <div class="flex items-center gap-2 mb-1">
-                                <span class="font-mono text-[10px] font-bold text-slate-400">${item.code}</span>
-                                <span class="text-[10px] font-bold text-[#337418] bg-[#5DD62C]/15 px-2 py-0.5 rounded-md">Stok ${item.stock}</span>
-                            </div>
-                            <h4 class="text-xs sm:text-sm font-black text-[#0F0F0F] leading-snug">${item.name}</h4>
-                            <div class="text-xs text-slate-500 font-medium mt-1">
-                                Rp ${formatNumber(item.price)} / ${item.unit} × <span class="font-bold text-[#337418]">${item.qty}</span>
-                                = <span class="font-black text-[#0F0F0F]">Rp ${formatNumber(item.price * item.qty)}</span>
+                        <div class="flex items-center gap-3 min-w-0 flex-1">
+                            ${item.image_url ? `
+                                <img src="${item.image_url}" alt="${item.name}" class="w-12 h-12 rounded-xl object-cover border border-slate-200 shrink-0 shadow-2xs">
+                            ` : `
+                                <div class="w-12 h-12 rounded-xl bg-white border border-slate-200 text-slate-300 flex items-center justify-center shrink-0">
+                                    <i class="fa-solid fa-box text-sm"></i>
+                                </div>
+                            `}
+                            <div class="min-w-0 flex-1">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="font-mono text-[10px] font-bold text-slate-400">${item.code}</span>
+                                    <span class="text-[10px] font-bold text-[#337418] bg-[#5DD62C]/15 px-2 py-0.5 rounded-md">Stok ${item.stock}</span>
+                                </div>
+                                <h4 class="text-xs sm:text-sm font-black text-[#0F0F0F] leading-snug">${item.name}</h4>
+                                <div class="text-xs text-slate-500 font-medium mt-1">
+                                    Rp ${formatNumber(item.price)} / ${item.unit} × <span class="font-bold text-[#337418]">${item.qty}</span>
+                                    = <span class="font-black text-[#0F0F0F]">Rp ${formatNumber(item.price * item.qty)}</span>
+                                </div>
                             </div>
                         </div>
 
@@ -548,13 +647,165 @@
         }
     }
 
+    let liveCountdownTimer = null;
+
+    function formatRealtimeExpiry(data) {
+        if (data.payment_expired_ts) {
+            const date = new Date(data.payment_expired_ts * 1000);
+            return formatLocalExpiryDate(date);
+        }
+        if (data.payment_expired_iso) {
+            const date = new Date(data.payment_expired_iso);
+            return formatLocalExpiryDate(date);
+        }
+        return data.payment_expired_at || '-';
+    }
+
+    function formatLocalExpiryDate(date) {
+        if (!date || isNaN(date.getTime())) return '-';
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+        const day = date.getDate();
+        const month = months[date.getMonth()];
+        const year = date.getFullYear();
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        return `${day} ${month} ${year}, ${hours}:${minutes} WIB`;
+    }
+
+    function startLiveCountdown(data, countdownElId) {
+        clearInterval(liveCountdownTimer);
+        const el = document.getElementById(countdownElId);
+        if (!el) return;
+
+        let targetTime = null;
+        if (data.payment_expired_ts) {
+            targetTime = data.payment_expired_ts * 1000;
+        } else if (data.payment_expired_iso) {
+            targetTime = new Date(data.payment_expired_iso).getTime();
+        }
+
+        if (!targetTime || isNaN(targetTime)) {
+            el.classList.add('hidden');
+            return;
+        }
+
+        function tick() {
+            const now = Date.now();
+            const diff = targetTime - now;
+
+            if (diff <= 0) {
+                clearInterval(liveCountdownTimer);
+                el.textContent = 'Waktu Habis';
+                el.className = 'text-[10px] font-black text-rose-700 bg-rose-50 border border-rose-200 px-2 py-0.5 rounded-full inline-block mt-0.5';
+                el.classList.remove('hidden');
+                return;
+            }
+
+            const totalSecs = Math.floor(diff / 1000);
+            const hours = Math.floor(totalSecs / 3600);
+            const mins = Math.floor((totalSecs % 3600) / 60);
+            const secs = totalSecs % 60;
+
+            let countdownText = '';
+            if (hours > 0) {
+                countdownText = `${hours}j ${mins}m ${secs}d tersisa`;
+            } else {
+                countdownText = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')} tersisa`;
+            }
+
+            el.textContent = countdownText;
+            if (diff < 300000) { // < 5 menit
+                el.className = 'text-[10px] font-black text-rose-600 bg-rose-50 border border-rose-200 px-2 py-0.5 rounded-full inline-block mt-0.5 animate-pulse';
+            } else {
+                el.className = 'text-[10px] font-black text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full inline-block mt-0.5';
+            }
+            el.classList.remove('hidden');
+        }
+
+        tick();
+        liveCountdownTimer = setInterval(tick, 1000);
+    }
+
     function openSuccessModal(data) {
+        clearInterval(liveCountdownTimer);
         document.getElementById('vaPendingModal').classList.add('hidden');
+        const qrisModal = document.getElementById('qrisPendingModal');
+        if (qrisModal) qrisModal.classList.add('hidden');
         document.getElementById('modalInvoiceCode').textContent = data.invoice_code;
         document.getElementById('modalMethod').textContent = data.payment_label || (data.payment_method || '').toUpperCase();
         document.getElementById('modalTotal').textContent = 'Rp ' + formatNumber(data.total_price);
         document.getElementById('modalPrintBtn').href = data.receipt_url;
         document.getElementById('successModal').classList.remove('hidden');
+    }
+
+    function openQrisPendingModal(data) {
+        pendingQrisContext = data;
+
+        document.getElementById('qrisModalInvoice').textContent = data.invoice_code;
+        document.getElementById('qrisModalTotal').textContent = 'Rp ' + formatNumber(data.total_price);
+        document.getElementById('qrisModalExpiry').textContent = formatRealtimeExpiry(data);
+        startLiveCountdown(data, 'qrisModalCountdown');
+        document.getElementById('qrisSimulatorLink').href = data.simulator_url || data.payment_url || 'https://sandbox.duitku.com';
+
+        const qrImg = document.getElementById('qrisModalImage');
+        if (data.qr_image_url) {
+            qrImg.src = data.qr_image_url;
+        } else if (data.qr_string) {
+            qrImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' + encodeURIComponent(data.qr_string);
+        }
+
+        const fb = document.getElementById('qrisStatusFeedback');
+        fb.classList.add('hidden');
+        document.getElementById('qrisPendingModal').classList.remove('hidden');
+    }
+
+    async function checkQrisPaymentStatus() {
+        if (!pendingQrisContext || !pendingQrisContext.status_check_url) return;
+
+        const btn = document.getElementById('btnCheckQrisStatus');
+        const fb = document.getElementById('qrisStatusFeedback');
+        const origHtml = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i><span>Mengecek ke Duitku Sandbox...</span>';
+
+        try {
+            const res = await fetch(pendingQrisContext.status_check_url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json'
+                }
+            });
+
+            const statusRes = await res.json();
+
+            if (!res.ok || !statusRes.success) {
+                throw new Error(statusRes.message || 'Gagal mengecek status pembayaran.');
+            }
+
+            if (statusRes.is_paid) {
+                openSuccessModal({
+                    ...pendingQrisContext,
+                    receipt_url: statusRes.receipt_url || pendingQrisContext.receipt_url
+                });
+            } else {
+                fb.classList.remove('hidden');
+                if (statusRes.payment_status === 'expired' || statusRes.payment_status === 'failed') {
+                    fb.className = 'p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-bold flex items-start gap-2';
+                    fb.innerHTML = `<i class="fa-solid fa-circle-xmark mt-0.5 shrink-0"></i><span>${statusRes.message}</span>`;
+                } else {
+                    fb.className = 'p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs font-bold flex items-start gap-2';
+                    fb.innerHTML = `<i class="fa-solid fa-clock mt-0.5 shrink-0"></i><span>${statusRes.message}</span>`;
+                }
+            }
+        } catch (err) {
+            fb.classList.remove('hidden');
+            fb.className = 'p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-bold flex items-start gap-2';
+            fb.innerHTML = `<i class="fa-solid fa-circle-exclamation mt-0.5 shrink-0"></i><span>${err.message}</span>`;
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = origHtml;
+        }
     }
 
     function openVaPendingModal(data) {
@@ -564,8 +815,9 @@
         document.getElementById('vaModalBankTitle').textContent = `Virtual Account ${data.va_bank || ''}`;
         document.getElementById('vaModalNumber').textContent = data.va_number || '-';
         document.getElementById('vaModalTotal').textContent = 'Rp ' + formatNumber(data.total_price);
-        document.getElementById('vaModalExpiry').textContent = data.payment_expired_at || '24 jam';
-        document.getElementById('vaSimulatorLink').href = data.simulator_url || 'https://simulator.sandbox.midtrans.com/v2/va/index';
+        document.getElementById('vaModalExpiry').textContent = formatRealtimeExpiry(data);
+        startLiveCountdown(data, 'vaModalCountdown');
+        document.getElementById('vaSimulatorLink').href = data.simulator_url || data.payment_url || 'https://sandbox.duitku.com';
 
         const billerWrap = document.getElementById('vaModalBillerWrap');
         if (data.va_biller_code) {
@@ -587,7 +839,7 @@
         const fb = document.getElementById('vaStatusFeedback');
         const origHtml = btn.innerHTML;
         btn.disabled = true;
-        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i><span>Mengecek ke Midtrans Sandbox...</span>';
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i><span>Mengecek ke Duitku Sandbox...</span>';
 
         try {
             const res = await fetch(pendingVaContext.status_check_url, {
@@ -640,7 +892,7 @@
         const btn = document.getElementById('btnCheckout');
         const originalHtml = btn.innerHTML;
         btn.disabled = true;
-        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i><span>Menghubungi Midtrans...</span>';
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i><span>Menghubungi Duitku...</span>';
 
         try {
             const payload = {
@@ -675,7 +927,11 @@
             renderCart();
 
             if (data.payment_status === 'pending') {
-                openVaPendingModal(data);
+                if (data.payment_method === 'qris') {
+                    openQrisPendingModal(data);
+                } else {
+                    openVaPendingModal(data);
+                }
             } else {
                 openSuccessModal(data);
             }

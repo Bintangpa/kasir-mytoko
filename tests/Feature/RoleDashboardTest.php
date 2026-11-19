@@ -174,38 +174,72 @@ class RoleDashboardTest extends TestCase
             'payment_method' => 'cash',
         ])->assertStatus(422);
 
-        // Dapat melakukan pembayaran via QRIS
+        // Mock Duitku Sandbox API untuk QRIS, Virtual Account & Cek Status
+        Http::fake([
+            'https://sandbox.duitku.com/webapi/api/merchant/v2/inquiry' => function ($request) {
+                $body = $request->data();
+                $method = $body['paymentMethod'] ?? '';
+                if ($method === 'SP') {
+                    return Http::response([
+                        'merchantCode' => 'DS38179',
+                        'reference' => 'DS3817926QRISTRX',
+                        'paymentUrl' => 'https://sandbox.duitku.com/topup/topupdirectv2.aspx?ref=QRIS',
+                        'qrString' => '00020101021226610016ID.CO.SHOPEE.WWW01189360091800202688450208202688450303UKE520479885303360540810000.005802ID5906Duitku6015KAB. BANGKA BAR610533315622205181341062826192640096304CF38',
+                        'amount' => '10000',
+                        'statusCode' => '00',
+                        'statusMessage' => 'SUCCESS',
+                    ], 200);
+                }
+
+                return Http::response([
+                    'merchantCode' => 'DS38179',
+                    'reference' => 'DS3817926MOCKTRX',
+                    'paymentUrl' => 'https://sandbox.duitku.com/topup/topupdirectv2.aspx?ref=MOCK',
+                    'vaNumber' => '7007014002477346',
+                    'amount' => '10000',
+                    'statusCode' => '00',
+                    'statusMessage' => 'SUCCESS',
+                ], 200);
+            },
+            'https://sandbox.duitku.com/webapi/api/merchant/transactionStatus' => Http::response([
+                'merchantOrderId' => '*',
+                'reference' => 'DS3817926MOCKTRX',
+                'amount' => '10000',
+                'statusCode' => '00',
+                'statusMessage' => 'SUCCESS',
+            ], 200),
+        ]);
+
+        // Dapat melakukan pembayaran via QRIS Duitku Sandbox
         $response = $this->actingAs($user)->postJson('/user/checkout', [
             'items' => [
                 ['id' => $product->id, 'qty' => 2],
             ],
             'payment_method' => 'qris',
-            'notes' => 'Pesanan pengguna test',
+            'notes' => 'Pesanan pengguna test QRIS',
         ]);
 
         $response->assertStatus(200);
-        $response->assertJson(['success' => true]);
-
-        // Mock Midtrans Sandbox Core API untuk Virtual Account & Cek Status
-        Http::fake([
-            'https://api.sandbox.midtrans.com/v2/charge' => Http::response([
-                'status_code' => '201',
-                'status_message' => 'Success, Bank Transfer transaction is created',
-                'transaction_id' => 'midtrans-trx-001',
-                'transaction_status' => 'pending',
-                'va_numbers' => [
-                    ['bank' => 'bca', 'va_number' => '235510000111222333'],
-                ],
-                'expiry_time' => now()->addHours(24)->format('Y-m-d H:i:s'),
-            ], 200),
-            'https://api.sandbox.midtrans.com/v2/*/status' => Http::response([
-                'status_code' => '200',
-                'transaction_id' => 'midtrans-trx-001',
-                'transaction_status' => 'settlement',
-            ], 200),
+        $response->assertJson([
+            'success' => true,
+            'payment_method' => 'qris',
+            'payment_status' => 'pending',
         ]);
+        $this->assertNotEmpty($response->json('qr_string'));
+        $this->assertNotEmpty($response->json('qr_image_url'));
 
-        // Dapat melakukan pembayaran via Virtual Account (VA) Midtrans Sandbox
+        $trxId = $response->json('transaction_id');
+
+        // Cek status QRIS langsung ke Duitku Sandbox -> berubah menjadi Lunas (paid)
+        $this->actingAs($user)->postJson("/user/transactions/{$trxId}/check-status")
+            ->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+                'payment_status' => 'paid',
+                'is_paid' => true,
+            ]);
+
+        // Dapat melakukan pembayaran via Virtual Account (VA) Duitku Sandbox
         $vaResponse = $this->actingAs($user)->postJson('/user/checkout', [
             'items' => [
                 ['id' => $product->id, 'qty' => 1],
@@ -219,13 +253,13 @@ class RoleDashboardTest extends TestCase
             'success' => true,
             'payment_method' => 'va',
             'payment_status' => 'pending',
-            'va_number' => '235510000111222333',
+            'va_number' => '7007014002477346',
             'change_amount' => 0,
         ]);
 
         $vaTrxId = $vaResponse->json('transaction_id');
 
-        // Cek status VA langsung ke Midtrans Sandbox -> berubah menjadi Lunas (paid)
+        // Cek status VA langsung ke Duitku Sandbox -> berubah menjadi Lunas (paid)
         $this->actingAs($user)->postJson("/user/transactions/{$vaTrxId}/check-status")
             ->assertStatus(200)
             ->assertJson([
@@ -252,21 +286,21 @@ class RoleDashboardTest extends TestCase
         }
     }
 
-    public function test_midtrans_webhook_verifies_signature_and_restores_stock_on_expire(): void
+    public function test_duitku_webhook_verifies_signature_and_restores_stock_on_expire(): void
     {
         $user = User::where('role', 'user')->first();
         $product = Product::where('stock', '>', 5)->first();
         $initialStock = $product->stock;
 
         Http::fake([
-            'https://api.sandbox.midtrans.com/v2/charge' => Http::response([
-                'status_code' => '201',
-                'transaction_id' => 'midtrans-trx-exp',
-                'transaction_status' => 'pending',
-                'va_numbers' => [
-                    ['bank' => 'bni', 'va_number' => '9881234567890'],
-                ],
-                'expiry_time' => now()->addHours(24)->format('Y-m-d H:i:s'),
+            'https://sandbox.duitku.com/webapi/api/merchant/v2/inquiry' => Http::response([
+                'merchantCode' => 'DS38179',
+                'reference' => 'DS3817926EXPTRX',
+                'paymentUrl' => 'https://sandbox.duitku.com/topup/topupdirectv2.aspx?ref=EXP',
+                'vaNumber' => '9884547011088614',
+                'amount' => '10000',
+                'statusCode' => '00',
+                'statusMessage' => 'SUCCESS',
             ], 200),
         ]);
 
@@ -277,29 +311,30 @@ class RoleDashboardTest extends TestCase
         ])->assertStatus(200);
 
         $orderId = $res->json('invoice_code');
-        $grossAmount = number_format((float) $res->json('total_price'), 2, '.', '');
+        $amount = (string) (int) round((float) $res->json('total_price'));
         $this->assertEquals($initialStock - 2, $product->fresh()->stock);
 
         // Signature palsu harus ditolak 403
-        $this->postJson('/webhooks/midtrans', [
-            'order_id' => $orderId,
-            'status_code' => '202',
-            'gross_amount' => $grossAmount,
-            'transaction_status' => 'expire',
-            'signature_key' => 'invalid-signature',
+        $this->postJson('/webhooks/duitku', [
+            'merchantCode' => 'DS38179',
+            'amount' => $amount,
+            'merchantOrderId' => $orderId,
+            'resultCode' => '02',
+            'signature' => 'invalid-signature',
         ])->assertStatus(403);
 
-        // Signature SHA-512 valid dari Midtrans dengan status expire -> status expired & stok kembali utuh
-        $serverKey = (string) config('services.midtrans.server_key');
-        $validSignature = hash('sha512', $orderId . '202' . $grossAmount . $serverKey);
+        // Signature MD5 valid dari Duitku dengan resultCode 02 (failed/expired) -> status expired & stok kembali utuh
+        $merchantCode = (string) config('services.duitku.merchant_code', 'DS38179');
+        $apiKey = (string) config('services.duitku.api_key', '3290a37b1465e4425812db7d33430b57');
+        $validSignature = md5($merchantCode . $amount . $orderId . $apiKey);
 
-        $this->postJson('/webhooks/midtrans', [
-            'order_id' => $orderId,
-            'status_code' => '202',
-            'gross_amount' => $grossAmount,
-            'transaction_status' => 'expire',
-            'transaction_id' => 'midtrans-trx-exp',
-            'signature_key' => $validSignature,
+        $this->postJson('/webhooks/duitku', [
+            'merchantCode' => $merchantCode,
+            'amount' => $amount,
+            'merchantOrderId' => $orderId,
+            'resultCode' => '02',
+            'reference' => 'DS3817926EXPTRX',
+            'signature' => $validSignature,
         ])->assertStatus(200)
             ->assertJson([
                 'success' => true,

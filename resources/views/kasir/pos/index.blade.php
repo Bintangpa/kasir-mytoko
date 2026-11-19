@@ -134,10 +134,19 @@
                                 </div>
                             </div>
 
-                            <!-- Name & Category -->
-                            <div>
-                                <h4 class="text-xs font-bold text-[#0F0F0F] line-clamp-2 leading-tight">{{ $prod->name }}</h4>
-                                <span class="text-[10px] text-slate-400 block mt-0.5">{{ $prod->category->name ?? 'Umum' }}</span>
+                            <!-- Name & Category & Photo -->
+                            <div class="flex items-center gap-2.5">
+                                @if($prod->has_image)
+                                    <img src="{{ route('products.image', $prod->id) }}" alt="{{ $prod->name }}" class="w-10 h-10 rounded-xl object-cover border border-slate-200 shrink-0 shadow-2xs">
+                                @else
+                                    <div class="w-10 h-10 rounded-xl bg-[#F8F8F8] border border-slate-200/80 text-slate-300 flex items-center justify-center shrink-0">
+                                        <i class="fa-solid fa-box text-xs"></i>
+                                    </div>
+                                @endif
+                                <div class="min-w-0 flex-1">
+                                    <h4 class="text-xs font-bold text-[#0F0F0F] line-clamp-2 leading-tight">{{ $prod->name }}</h4>
+                                    <span class="text-[10px] text-slate-400 block mt-0.5 truncate">{{ $prod->category->name ?? 'Umum' }}</span>
+                                </div>
                             </div>
 
                             <!-- Price & Add Icon -->
@@ -208,8 +217,8 @@
                     </div>
                     <div class="flex items-center justify-between text-slate-600">
                         <span class="font-medium">Diskon (Rp)</span>
-                        <input type="number" id="discountInput" value="0" min="0" step="500" oninput="calculateTotal()"
-                            class="w-24 px-2 py-0.5 text-right font-bold text-xs bg-white border border-slate-200 rounded-md focus:outline-none focus:ring-1 focus:ring-[#5DD62C] text-[#0F0F0F]">
+                        <input type="text" inputmode="numeric" id="discountInput" value="0" placeholder="0" onfocus="if(this.value==='0') this.select();" oninput="handleDiscountInput(this)"
+                            class="w-28 px-2 py-0.5 text-right font-bold text-xs bg-white border border-slate-200 rounded-md focus:outline-none focus:ring-1 focus:ring-[#5DD62C] text-[#0F0F0F]">
                     </div>
                     <div class="flex items-center justify-between pt-1 border-t border-slate-200 text-sm">
                         <span class="font-black text-[#0F0F0F]">Total Tagihan</span>
@@ -233,7 +242,7 @@
                         <div class="flex items-center gap-2">
                             <div class="relative flex-1">
                                 <span class="absolute inset-y-0 left-0 pl-2.5 flex items-center text-[11px] font-bold text-slate-400">Rp</span>
-                                <input type="number" id="payAmountInput" min="0" step="1000" placeholder="Nominal Bayar" oninput="calculateChange()"
+                                <input type="text" inputmode="numeric" id="payAmountInput" placeholder="0" onfocus="this.select();" oninput="handlePayAmountInput(this)"
                                     class="w-full pl-8 pr-2 py-1.5 text-xs font-black bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#5DD62C] text-[#0F0F0F]">
                             </div>
                             <button type="button" onclick="setExactAmount()" class="px-2.5 py-1.5 bg-[#5DD62C]/15 hover:bg-[#5DD62C]/25 text-[#337418] font-black text-[11px] rounded-lg border border-[#5DD62C]/30 whitespace-nowrap transition-colors">
@@ -541,12 +550,101 @@
             });
         }
 
+        // Helper: format angka dengan titik (.) sebagai pemisah ribuan saja (e.g. 5.000.000)
+        function formatNumber(num) {
+            if (num === null || num === undefined || isNaN(num)) return '0';
+            return Math.round(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+        }
+
+        // Helper: ambil nilai numerik murni dari elemen input
+        function getNumericValue(elementId) {
+            const el = document.getElementById(elementId);
+            if (!el) return 0;
+            const digits = el.value.replace(/\D/g, '');
+            return digits ? parseInt(digits, 10) : 0;
+        }
+
+        // Helper: set nilai input yang terformat titik ribuan
+        function setFormattedInput(elementId, val) {
+            const el = document.getElementById(elementId);
+            if (!el) return;
+            const num = Math.round(val || 0);
+            el.value = num > 0 ? formatNumber(num) : '';
+        }
+
+        // Format input nominal bayar secara real-time saat diketik kasir (e.g. 5000000 -> 5.000.000)
+        function handlePayAmountInput(input) {
+            const cursorPosition = input.selectionStart;
+            const originalLength = input.value.length;
+
+            const digits = input.value.replace(/\D/g, '');
+            if (!digits) {
+                input.value = '';
+                calculateChange();
+                return;
+            }
+
+            const num = parseInt(digits, 10);
+            const formatted = formatNumber(num);
+            input.value = formatted;
+
+            // Pertahankan posisi kursor saat titik disisipkan
+            const newLength = formatted.length;
+            const newPosition = Math.max(0, cursorPosition + (newLength - originalLength));
+            input.setSelectionRange(newPosition, newPosition);
+
+            calculateChange();
+        }
+
+        // Format input diskon secara real-time saat diketik kasir
+        function handleDiscountInput(input) {
+            const cursorPosition = input.selectionStart;
+            const originalLength = input.value.length;
+
+            const digits = input.value.replace(/\D/g, '');
+            if (!digits) {
+                input.value = '0';
+                calculateTotal();
+                return;
+            }
+
+            const num = parseInt(digits, 10);
+            const formatted = formatNumber(num);
+            input.value = formatted;
+
+            const newLength = formatted.length;
+            const newPosition = Math.max(0, cursorPosition + (newLength - originalLength));
+            input.setSelectionRange(newPosition, newPosition);
+
+            calculateTotal();
+        }
+
+        // Smart Backspace: hapus digit angka sebelum titik jika kursor berada tepat setelah titik
+        function setupSmartBackspace(inputId, handler) {
+            const el = document.getElementById(inputId);
+            if (!el) return;
+            el.addEventListener('keydown', function(e) {
+                if (e.key === 'Backspace' && this.selectionStart === this.selectionEnd && this.selectionStart > 0) {
+                    const pos = this.selectionStart;
+                    if (this.value[pos - 1] === '.') {
+                        e.preventDefault();
+                        const before = this.value.slice(0, pos - 2);
+                        const after = this.value.slice(pos);
+                        this.value = before + after;
+                        const newPos = Math.max(0, pos - 2);
+                        this.setSelectionRange(newPos, newPos);
+                        handler(this);
+                    }
+                }
+            });
+        }
+        setupSmartBackspace('payAmountInput', handlePayAmountInput);
+        setupSmartBackspace('discountInput', handleDiscountInput);
+
         // Calculate Total
         function calculateTotal() {
             const subtotal = cart.reduce((sum, i) => sum + (i.price * i.qty), 0);
-            const discountInput = document.getElementById('discountInput');
-            const discount = Math.max(0, parseFloat(discountInput.value) || 0);
-
+            const discount = Math.max(0, getNumericValue('discountInput'));
             const total = Math.max(0, subtotal - discount);
 
             document.getElementById('cartSubtotalText').textContent = 'Rp ' + formatNumber(subtotal);
@@ -554,7 +652,7 @@
 
             // Jika metode non-tunai, samakan uang bayar dengan total
             if (activePaymentMethod !== 'cash') {
-                document.getElementById('payAmountInput').value = total;
+                setFormattedInput('payAmountInput', total);
             }
 
             calculateChange();
@@ -563,8 +661,7 @@
         // Calculate Kembalian
         function calculateChange() {
             const total = getCartTotal();
-            const payInput = document.getElementById('payAmountInput');
-            const payAmount = parseFloat(payInput.value) || 0;
+            const payAmount = getNumericValue('payAmountInput');
             const changeText = document.getElementById('changeAmountText');
 
             if (payAmount >= total) {
@@ -580,7 +677,7 @@
 
         function getCartTotal() {
             const subtotal = cart.reduce((sum, i) => sum + (i.price * i.qty), 0);
-            const discount = Math.max(0, parseFloat(document.getElementById('discountInput').value) || 0);
+            const discount = Math.max(0, getNumericValue('discountInput'));
             return Math.max(0, subtotal - discount);
         }
 
@@ -596,25 +693,21 @@
             });
 
             if (method !== 'cash') {
-                document.getElementById('payAmountInput').value = getCartTotal();
+                setFormattedInput('payAmountInput', getCartTotal());
                 calculateChange();
             }
         }
 
         // Fast Cash Helpers
         function setExactAmount() {
-            document.getElementById('payAmountInput').value = getCartTotal();
+            setFormattedInput('payAmountInput', getCartTotal());
             calculateChange();
         }
 
         function addPayAmount(val) {
-            const current = parseFloat(document.getElementById('payAmountInput').value) || 0;
-            document.getElementById('payAmountInput').value = current + val;
+            const current = getNumericValue('payAmountInput');
+            setFormattedInput('payAmountInput', current + val);
             calculateChange();
-        }
-
-        function formatNumber(num) {
-            return new Intl.NumberFormat('id-ID').format(num);
         }
 
         // Process Checkout via AJAX
@@ -625,7 +718,7 @@
             }
 
             const total = getCartTotal();
-            const payAmount = parseFloat(document.getElementById('payAmountInput').value) || 0;
+            const payAmount = getNumericValue('payAmountInput');
 
             if (activePaymentMethod === 'cash' && payAmount < total) {
                 alert(`Uang pembayaran kurang Rp ${formatNumber(total - payAmount)} dari total belanja.`);
@@ -642,7 +735,7 @@
                 customer_name: document.getElementById('customerName').value.trim() || 'Pelanggan Umum',
                 pay_amount: payAmount >= total ? payAmount : total,
                 payment_method: activePaymentMethod,
-                discount: parseFloat(document.getElementById('discountInput').value) || 0,
+                discount: getNumericValue('discountInput'),
             };
 
             try {
@@ -675,7 +768,7 @@
                     // Reset cart
                     cart = [];
                     document.getElementById('customerName').value = '';
-                    document.getElementById('discountInput').value = 0;
+                    document.getElementById('discountInput').value = '0';
                     document.getElementById('payAmountInput').value = '';
                     setPaymentMethod('cash');
                     renderCart();

@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\Transaction;
-use App\Services\MidtransService;
+use App\Services\DuitkuService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -16,7 +16,7 @@ use Illuminate\View\View;
 
 class UserShopController extends Controller
 {
-    public function __construct(protected MidtransService $midtrans)
+    public function __construct(protected DuitkuService $duitku)
     {
     }
 
@@ -48,7 +48,7 @@ class UserShopController extends Controller
     }
 
     /**
-     * Proses pembayaran oleh pengguna (QRIS & Virtual Account Midtrans Sandbox)
+     * Proses pembayaran oleh pengguna (QRIS & Virtual Account Duitku Sandbox)
      */
     public function checkout(Request $request): JsonResponse
     {
@@ -72,7 +72,7 @@ class UserShopController extends Controller
         $vaBank = $paymentMethod === 'va' ? strtolower($request->input('va_bank', 'bca')) : null;
         $vaBankUpper = $vaBank ? strtoupper($vaBank) : null;
         $userNote = $request->notes ? trim($request->notes) : '';
-        $methodNote = $paymentMethod === 'va' ? "Virtual Account ({$vaBankUpper}) - Midtrans Sandbox" : 'Pembayaran QRIS';
+        $methodNote = $paymentMethod === 'va' ? "Virtual Account ({$vaBankUpper}) - Duitku Sandbox" : 'Pembayaran QRIS';
         $notes = $userNote !== '' ? "{$methodNote} | {$userNote}" : $methodNote;
         $user = Auth::user();
 
@@ -138,7 +138,7 @@ class UserShopController extends Controller
                     $invoiceCode = $todayPrefix . str_pad($nextNumber++, 4, '0', STR_PAD_LEFT);
                 } while (Transaction::where('invoice_code', $invoiceCode)->exists());
 
-                $isVa = $paymentMethod === 'va';
+                $isOnlinePayment = in_array($paymentMethod, ['va', 'qris'], true);
 
                 $trx = Transaction::create([
                     'invoice_code' => $invoiceCode,
@@ -151,9 +151,9 @@ class UserShopController extends Controller
                     'pay_amount' => $payAmount,
                     'change_amount' => $changeAmount,
                     'payment_method' => $paymentMethod,
-                    'payment_status' => $isVa ? 'pending' : 'paid',
+                    'payment_status' => $isOnlinePayment ? 'pending' : 'paid',
                     'va_bank' => $vaBank,
-                    'paid_at' => $isVa ? null : now(),
+                    'paid_at' => $isOnlinePayment ? null : now(),
                     'notes' => $notes,
                 ]);
 
@@ -161,16 +161,34 @@ class UserShopController extends Controller
                     $trx->items()->create($prepItem);
                 }
 
-                // Jika Virtual Account, panggil Midtrans Core API Sandbox (otomatis rollback jika gagal)
-                if ($isVa) {
+                $paymentUrl = null;
+                $qrString = null;
+
+                if ($paymentMethod === 'va') {
                     $trx->load(['items', 'user']);
-                    $charge = $this->midtrans->chargeVirtualAccount($trx, $vaBank);
+                    $charge = $this->duitku->chargeVirtualAccount($trx, $vaBank);
+                    $paymentUrl = $charge['payment_url'] ?? null;
 
                     $trx->update([
                         'payment_status' => $charge['payment_status'],
                         'va_bank' => $charge['va_bank'],
                         'va_number' => $charge['va_number'],
-                        'va_biller_code' => $charge['va_biller_code'],
+                        'va_biller_code' => $charge['va_biller_code'] ?? null,
+                        'payment_url' => $paymentUrl,
+                        'gateway_transaction_id' => $charge['gateway_transaction_id'],
+                        'payment_expired_at' => $charge['payment_expired_at'],
+                        'paid_at' => $charge['payment_status'] === 'paid' ? now() : null,
+                    ]);
+                } elseif ($paymentMethod === 'qris') {
+                    $trx->load(['items', 'user']);
+                    $charge = $this->duitku->chargeQris($trx);
+                    $paymentUrl = $charge['payment_url'] ?? null;
+                    $qrString = $charge['qr_string'] ?? null;
+
+                    $trx->update([
+                        'payment_status' => $charge['payment_status'],
+                        'qr_string' => $qrString,
+                        'payment_url' => $paymentUrl,
                         'gateway_transaction_id' => $charge['gateway_transaction_id'],
                         'payment_expired_at' => $charge['payment_expired_at'],
                         'paid_at' => $charge['payment_status'] === 'paid' ? now() : null,
@@ -180,16 +198,23 @@ class UserShopController extends Controller
                 return [
                     'transaction' => $trx->fresh(),
                     'updated_stocks' => $updatedStocks,
+                    'payment_url' => $paymentUrl,
+                    'qr_string' => $qrString,
                 ];
             });
 
             /** @var Transaction $transaction */
             $transaction = $result['transaction'];
+            $qrImageUrl = !empty($result['qr_string'])
+                ? 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' . urlencode($result['qr_string'])
+                : null;
 
             return response()->json([
                 'success' => true,
                 'message' => $transaction->isPending()
-                    ? 'Nomor Virtual Account berhasil dibuat melalui Midtrans Sandbox. Silakan selesaikan pembayaran.'
+                    ? ($transaction->payment_method === 'qris'
+                        ? 'QRIS Duitku Sandbox berhasil dibuat. Silakan scan kode QR atau buka simulator.'
+                        : 'Nomor Virtual Account berhasil dibuat melalui Duitku Sandbox. Silakan selesaikan pembayaran.')
                     : 'Pembayaran berhasil diproses!',
                 'invoice_code' => $transaction->invoice_code,
                 'transaction_id' => $transaction->id,
@@ -204,12 +229,15 @@ class UserShopController extends Controller
                 'va_bank' => $transaction->va_bank ? strtoupper($transaction->va_bank) : null,
                 'va_number' => $transaction->va_number,
                 'va_biller_code' => $transaction->va_biller_code,
+                'qr_string' => $transaction->qr_string ?? $result['qr_string'],
+                'qr_image_url' => $qrImageUrl,
                 'payment_expired_at' => $transaction->payment_expired_at
-                    ? $transaction->payment_expired_at->format('d M Y, H:i')
+                    ? $transaction->payment_expired_at->timezone('Asia/Jakarta')->translatedFormat('d M Y, H:i') . ' WIB'
                     : null,
-                'simulator_url' => $transaction->payment_method === 'va'
-                    ? MidtransService::simulatorUrl($transaction->va_bank)
-                    : null,
+                'payment_expired_iso' => $transaction->payment_expired_at?->timezone('Asia/Jakarta')->toIso8601String(),
+                'payment_expired_ts' => $transaction->payment_expired_at?->timestamp,
+                'simulator_url' => $result['payment_url'] ?? 'https://sandbox.duitku.com',
+                'payment_url' => $result['payment_url'] ?? null,
                 'status_check_url' => route('user.transactions.check-status', $transaction->id),
                 'receipt_url' => route('transactions.receipt', $transaction->id),
                 'updated_stocks' => $result['updated_stocks'],
@@ -223,7 +251,7 @@ class UserShopController extends Controller
     }
 
     /**
-     * Cek status pembayaran VA langsung ke Midtrans Sandbox
+     * Cek status pembayaran VA langsung ke Duitku Sandbox
      */
     public function checkPaymentStatus(Transaction $transaction): JsonResponse
     {
@@ -236,33 +264,35 @@ class UserShopController extends Controller
                 'success' => true,
                 'payment_status' => 'paid',
                 'is_paid' => true,
-                'paid_at' => $transaction->paid_at ? $transaction->paid_at->format('d M Y, H:i') : null,
+                'paid_at' => $transaction->paid_at ? $transaction->paid_at->timezone('Asia/Jakarta')->translatedFormat('d M Y, H:i') . ' WIB' : null,
                 'receipt_url' => route('transactions.receipt', $transaction->id),
                 'message' => 'Pembayaran sudah berstatus Lunas.',
             ]);
         }
 
         try {
-            $statusData = $this->midtrans->getTransactionStatus($transaction->invoice_code);
-            $updated = $this->midtrans->syncTransactionStatus(
+            $statusData = $this->duitku->getTransactionStatus($transaction->invoice_code);
+            $updated = $this->duitku->syncTransactionStatus(
                 $transaction,
-                $statusData['transaction_status'],
+                $statusData['duitku_status_code'],
                 $statusData['gateway_transaction_id']
             );
 
             $statusMessage = match ($updated->payment_status) {
-                'paid' => 'Pembayaran Virtual Account berhasil dikonfirmasi Lunas!',
-                'expired' => 'Nomor Virtual Account telah kedaluwarsa. Stok produk telah dikembalikan.',
-                'failed' => 'Transaksi dibatalkan atau ditolak oleh Midtrans.',
-                default => 'Pembayaran masih menunggu transfer di Simulator Midtrans Sandbox.',
+                'paid' => ($transaction->payment_method === 'qris'
+                    ? 'Pembayaran QRIS berhasil dikonfirmasi Lunas!'
+                    : 'Pembayaran Virtual Account berhasil dikonfirmasi Lunas!'),
+                'expired' => 'Pembayaran telah kedaluwarsa. Stok produk telah dikembalikan.',
+                'failed' => 'Transaksi dibatalkan atau ditolak oleh Duitku.',
+                default => 'Pembayaran masih menunggu proses di Duitku Sandbox.',
             };
 
             return response()->json([
                 'success' => true,
                 'payment_status' => $updated->payment_status,
-                'midtrans_status' => $statusData['transaction_status'],
+                'duitku_status' => $statusData['duitku_status_code'],
                 'is_paid' => $updated->isPaid(),
-                'paid_at' => $updated->paid_at ? $updated->paid_at->format('d M Y, H:i') : null,
+                'paid_at' => $updated->paid_at ? $updated->paid_at->timezone('Asia/Jakarta')->translatedFormat('d M Y, H:i') . ' WIB' : null,
                 'receipt_url' => route('transactions.receipt', $updated->id),
                 'message' => $statusMessage,
             ]);

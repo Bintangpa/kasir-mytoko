@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\DuitkuWebhookController;
 use App\Http\Controllers\Kasir\KasirDashboardController;
 use App\Http\Controllers\Kasir\PosController;
 use App\Http\Controllers\Kasir\TransactionHistoryController;
@@ -43,6 +44,7 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 // Shared Auth Routes (Admin, Kasir & User - validasi kepemilikan di controller)
 Route::middleware(['auth'])->group(function () {
     Route::get('/transactions/{transaction}/receipt', [TransactionReceiptController::class, 'show'])->name('transactions.receipt');
+    Route::get('/products/{product}/image', [ProductController::class, 'image'])->name('products.image');
 });
 
 // Receipt Printer Settings (Khusus Admin & Kasir)
@@ -88,5 +90,6 @@ Route::middleware(['auth', 'role:user'])->prefix('user')->name('user.')->group(f
     Route::post('/transactions/{transaction}/check-status', [UserShopController::class, 'checkPaymentStatus'])->name('transactions.check-status');
 });
 
-// MIDTRANS WEBHOOK NOTIFICATION ENDPOINT (Tanpa auth/CSRF, dilindungi SHA-512 Signature)
+// DUITKU PAYMENT GATEWAY WEBHOOK NOTIFICATION ENDPOINT (Tanpa auth/CSRF, dilindungi MD5 Signature)
+Route::post('/webhooks/duitku', [DuitkuWebhookController::class, 'handle'])->name('webhooks.duitku');
 Route::post('/webhooks/midtrans', [MidtransWebhookController::class, 'handle'])->name('webhooks.midtrans');

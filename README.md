@@ -58,7 +58,10 @@ mytokogue/
 │   │   ├── 2026_01_01_000010_create_categories_table.php        # Tabel kategori produk
 │   │   ├── 2026_01_01_000020_create_products_table.php          # Tabel produk dan stok
 │   │   ├── 2026_01_01_000030_create_transactions_table.php      # Tabel transaksi penjualan
-│   │   └── 2026_01_01_000040_create_transaction_items_table.php # Tabel rincian item transaksi
+│   │   ├── 2026_01_01_000040_create_transaction_items_table.php # Tabel rincian item transaksi
+│   │   ├── 2026_01_01_000050_add_payment_gateway_fields_to_transactions_table.php # Field Midtrans VA & QRIS
+│   │   ├── 2026_01_01_000060_add_indexes_and_backfill_transactions_table.php      # Index performa query & backfill
+│   │   └── 2026_01_01_000070_add_image_blob_fields_to_products_table.php          # Field foto database produk (image_data, image_mime, image_size)
 │   └── seeders/
 │       └── DatabaseSeeder.php                        # Data awal demo (kategori retail, 10 produk, akun demo)
 │

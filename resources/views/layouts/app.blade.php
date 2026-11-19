@@ -226,15 +226,36 @@
             <!-- Top Navbar -->
             <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 sm:px-6 z-20 shadow-2xs">
                 <div class="flex items-center gap-3">
-                    <button id="openSidebar" class="lg:hidden p-2 rounded-xl text-slate-600 hover:bg-[#F8F8F8]">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
-                    </button>
-                    <h1 class="text-base sm:text-lg font-black text-[#0F0F0F] tracking-tight truncate">
-                        @yield('header-title', 'Dashboard')
-                    </h1>
+                    @if(!auth()->user()->isUser())
+                        <button id="openSidebar" class="lg:hidden p-2 rounded-xl text-slate-600 hover:bg-[#F8F8F8]">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                        </button>
+                    @endif
+
+                    @if(auth()->user()->isUser())
+                        <!-- Brand Logo Khusus Mobile User (Sesuai Referensi Desain Modern) -->
+                        <a href="{{ route('user.products.index') }}" class="flex lg:hidden items-center gap-2.5">
+                            <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#337418] to-[#5DD62C] flex items-center justify-center text-[#0F0F0F] font-black shadow-xs">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <span class="text-sm font-black text-[#0F0F0F] tracking-tight">MYTOKO<span class="text-[#337418]">GUE</span></span>
+                                <span class="block text-[9px] text-slate-400 font-bold uppercase tracking-wider -mt-0.5">Online Store</span>
+                            </div>
+                        </a>
+                        <h1 class="hidden lg:block text-base sm:text-lg font-black text-[#0F0F0F] tracking-tight truncate">
+                            @yield('header-title', 'Dashboard')
+                        </h1>
+                    @else
+                        <h1 class="text-base sm:text-lg font-black text-[#0F0F0F] tracking-tight truncate">
+                            @yield('header-title', 'Dashboard')
+                        </h1>
+                    @endif
                 </div>
 
-                <div class="flex items-center gap-3">
+                <div class="flex items-center gap-2.5 sm:gap-3">
                     <!-- Shortcut POS button if admin -->
                     @if(auth()->user()->isAdmin())
                         <a href="{{ route('kasir.pos') }}" class="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-[#5DD62C]/15 text-[#337418] hover:bg-[#5DD62C] hover:text-[#0F0F0F] border border-[#5DD62C]/30 transition-all">
@@ -258,7 +279,7 @@
                     @endif
 
                     <!-- User Pill -->
-                    <div class="flex items-center gap-2 pl-2">
+                    <div class="flex items-center gap-2 pl-1 sm:pl-2">
                         <div class="w-8 h-8 rounded-full bg-[#202020] text-[#5DD62C] border border-[#337418]/50 flex items-center justify-center font-black text-xs shadow-xs">
                             {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
                         </div>
@@ -307,11 +328,103 @@
             </div>
 
             <!-- Page Body -->
-            <main class="flex-1 overflow-y-auto px-3 sm:px-6 pb-8">
+            <main class="flex-1 overflow-y-auto px-3 sm:px-6 {{ auth()->user()->isUser() ? 'pb-24 sm:pb-8' : 'pb-8' }}">
                 @yield('content')
             </main>
         </div>
     </div>
+
+    @if(auth()->user()->isUser())
+        <!-- BOTTOM NAVIGATION BAR (Khusus Mobile Handphone) Sesuai Referensi Desain Modern -->
+        <nav id="mobileBottomNav" class="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200/90 shadow-[0_-4px_25px_rgba(0,0,0,0.07)] px-2 py-1.5 flex items-center justify-around select-none">
+            <!-- 1. Katalog -->
+            <a href="{{ route('user.products.index') }}"
+               class="flex flex-col items-center justify-center flex-1 py-1 transition-all group {{ request()->routeIs('user.products.*') ? 'text-[#337418] font-black' : 'text-slate-400 hover:text-[#0F0F0F] font-semibold' }}">
+                <div class="relative w-8 h-8 rounded-xl flex items-center justify-center transition-colors {{ request()->routeIs('user.products.*') ? 'bg-[#5DD62C]/20 text-[#337418]' : 'group-hover:bg-[#F8F8F8]' }}">
+                    <i class="fa-solid fa-store text-sm"></i>
+                </div>
+                <span class="text-[10px] tracking-tight mt-0.5">Katalog</span>
+            </a>
+
+            <!-- 2. Keranjang -->
+            <a href="{{ route('user.cart') }}"
+               class="flex flex-col items-center justify-center flex-1 py-1 transition-all group {{ request()->routeIs('user.cart') ? 'text-[#337418] font-black' : 'text-slate-400 hover:text-[#0F0F0F] font-semibold' }}">
+                <div class="relative w-8 h-8 rounded-xl flex items-center justify-center transition-colors {{ request()->routeIs('user.cart') ? 'bg-[#5DD62C]/20 text-[#337418]' : 'group-hover:bg-[#F8F8F8]' }}">
+                    <i class="fa-solid fa-cart-shopping text-sm"></i>
+                    <span id="bottomNavCartBadge"
+                          class="hidden absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-[#0F0F0F] text-[#5DD62C] border-2 border-white text-[9px] font-black items-center justify-center shadow-xs">
+                        0
+                    </span>
+                </div>
+                <span class="text-[10px] tracking-tight mt-0.5">Keranjang</span>
+            </a>
+
+            <!-- 3. Riwayat Pembelian -->
+            <a href="{{ route('user.transactions.index') }}"
+               class="flex flex-col items-center justify-center flex-1 py-1 transition-all group {{ request()->routeIs('user.transactions.*') ? 'text-[#337418] font-black' : 'text-slate-400 hover:text-[#0F0F0F] font-semibold' }}">
+                <div class="relative w-8 h-8 rounded-xl flex items-center justify-center transition-colors {{ request()->routeIs('user.transactions.*') ? 'bg-[#5DD62C]/20 text-[#337418]' : 'group-hover:bg-[#F8F8F8]' }}">
+                    <i class="fa-solid fa-clock-rotate-left text-sm"></i>
+                </div>
+                <span class="text-[10px] tracking-tight mt-0.5">Riwayat</span>
+            </a>
+
+            <!-- 4. Akun Pengguna -->
+            <button type="button" onclick="openUserProfileModal()"
+                    class="flex flex-col items-center justify-center flex-1 py-1 text-slate-400 hover:text-[#0F0F0F] font-semibold transition-all group">
+                <div class="relative w-8 h-8 rounded-xl flex items-center justify-center transition-colors group-hover:bg-[#F8F8F8]">
+                    <i class="fa-solid fa-user text-sm"></i>
+                </div>
+                <span class="text-[10px] tracking-tight mt-0.5">Akun</span>
+            </button>
+        </nav>
+
+        <!-- Modal Profil Akun Mobile (Bottom Sheet) -->
+        <div id="userProfileModal" class="fixed inset-0 z-50 bg-[#0F0F0F]/80 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 hidden">
+            <div class="bg-white rounded-t-3xl sm:rounded-3xl max-w-sm w-full p-5 text-left shadow-2xl border border-slate-200 space-y-4">
+                <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-[#202020] text-[#5DD62C] border border-[#337418] flex items-center justify-center font-black text-sm">
+                            {{ strtoupper(substr(auth()->user()->name, 0, 2)) }}
+                        </div>
+                        <div class="min-w-0">
+                            <h4 class="text-xs font-black text-[#0F0F0F] truncate">{{ auth()->user()->name }}</h4>
+                            <span class="text-[10px] font-bold text-[#337418] uppercase bg-[#5DD62C]/20 px-2 py-0.5 rounded-md">Pelanggan Toko</span>
+                        </div>
+                    </div>
+                    <button type="button" onclick="closeUserProfileModal()" class="text-slate-400 hover:text-[#0F0F0F] p-1.5 rounded-lg">
+                        <i class="fa-solid fa-xmark text-base"></i>
+                    </button>
+                </div>
+
+                <div class="bg-[#F8F8F8] p-3.5 rounded-2xl border border-slate-200/80 space-y-2 text-xs">
+                    <div class="flex justify-between">
+                        <span class="text-slate-500 font-medium">Email:</span>
+                        <span class="font-bold text-[#0F0F0F] truncate ml-2">{{ auth()->user()->email }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-slate-500 font-medium">Status Akun:</span>
+                        <span class="font-bold text-[#337418]">Aktif</span>
+                    </div>
+                    @if(auth()->user()->phone)
+                    <div class="flex justify-between">
+                        <span class="text-slate-500 font-medium">Nomor HP:</span>
+                        <span class="font-mono font-bold text-[#0F0F0F]">{{ auth()->user()->phone }}</span>
+                    </div>
+                    @endif
+                </div>
+
+                <div class="pt-1">
+                    <form action="{{ route('logout') }}" method="POST">
+                        @csrf
+                        <button type="submit" class="w-full py-2.5 px-4 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold text-xs flex items-center justify-center gap-2 border border-rose-200 transition-colors">
+                            <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                            <span>Keluar / Logout</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    @endif
 
     <!-- Script Drawer Sidebar Mobile -->
     <script>
@@ -354,6 +467,16 @@
             window.syncUserCartBadges(items);
         };
 
+        window.openUserProfileModal = function() {
+            const modal = document.getElementById('userProfileModal');
+            if (modal) modal.classList.remove('hidden');
+        };
+
+        window.closeUserProfileModal = function() {
+            const modal = document.getElementById('userProfileModal');
+            if (modal) modal.classList.add('hidden');
+        };
+
         window.syncUserCartBadges = function(itemsArg) {
             const items = Array.isArray(itemsArg) ? itemsArg : window.getUserCart();
             const totalQty = items.reduce((sum, item) => sum + (parseInt(item.qty, 10) || 0), 0);
@@ -377,6 +500,18 @@
                     sideBadge.classList.remove('hidden');
                 } else {
                     sideBadge.classList.add('hidden');
+                }
+            }
+
+            const bottomBadge = document.getElementById('bottomNavCartBadge');
+            if (bottomBadge) {
+                bottomBadge.textContent = totalQty > 99 ? '99+' : totalQty;
+                if (totalQty > 0) {
+                    bottomBadge.classList.remove('hidden');
+                    bottomBadge.classList.add('flex');
+                } else {
+                    bottomBadge.classList.add('hidden');
+                    bottomBadge.classList.remove('flex');
                 }
             }
         };
